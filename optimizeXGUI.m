@@ -81,7 +81,7 @@ optimizeX(params);
 end
 function params = defineX(params)
 
-%% Pulse Sequence Parameters %%
+% Pulse Sequence Parameters
 params.nslices = 16;   % number of time bins in each TR (SPM default = 16)
 
 % Derive Some Additional Parameters %
@@ -89,7 +89,7 @@ params.ntrials=sum(params.trialsPerCond);  % computes total number of trials
 params.scan_length=ceil((params.restBegin + params.restEnd + params.ntrials*(params.meanISI+params.trialDur))/params.TR);  % computes total scan length (in TRs)
 params.TReff=params.TR/params.nslices;            % computes effective TR
 
-% Get a pseudoexponential distribution of ISIs %
+% Get ISI distribution %
 minISI = params.minISI;
 maxISI = params.maxISI;
 meanISI = params.meanISI;
@@ -106,39 +106,21 @@ jitdist = abs(meanISI - nanmean(jitSample));
 minIDX = find(jitdist==min(jitdist));
 params.jitSample = jitSample(:,minIDX(1));
 params.jitSample(isnan(params.jitSample)) = []; 
-% save params.mat params % save the Xparams variable
-
-%% VISUALIZE THE RESULTS
-% strucdisp(params); 
-% f = figure('color', 'white', 'units', 'normal', 'position', [.25 .30 .25 .30], 'menubar','none', 'name', 'Result');
-% facecolor = [0.50196      0.69412      0.82745];  
-% hist(params.jitSample); 
-% h = findobj(gca,'Type','patch');
-% set(h,'FaceColor',facecolor)
-% xlabel('SOA (s)', 'fontname', 'Arial', 'fontsize', 16);
-% ylabel('Frequency', 'fontname', 'Arial', 'fontsize', 16);
-% title('Jitter will be sampled from this population of SOAs', 'fontname', 'Arial', 'fontsize', 18);
-% box off
 
 end
 function optimizeX(params)
 
-% paramfile = 'params.mat';
 keep = params.keep; 
 L = params.L;
 conWeights = params.conWeights; 
-gensize = params.gensize; 
-ngen = params.ngen; 
+gensize = params.gensize;
+gensize = gensize - mod(gensize,2); % ensures gensize is divisible by 2
+ngen = params.ngen;
 maxtime = params.maxtime; 
-
-%% Derive Some Settings %%
-nalpha = round(gensize*.005);
+nalpha = params.keep; 
 halfgen = gensize/2;
-quartgen = gensize/4;
-threequartgen = halfgen + quartgen;
 L(:,end+1) = 0;
 L = L';
-
 ncontrasts = size(L,2);
 genbins = gensize/10:gensize/10:gensize;
 
@@ -185,17 +167,6 @@ winner = [winner ones(size(winner,1), 1)];
 loser = breedX(params, order{loseridx(1)}, jitter{loseridx(1)});
 loser = scalemat(loser(1).X);
 loser = [loser ones(size(loser,1), 1)];
-
-%% Visualize the Best Design
-% figure('color', 'white', 'units', 'normal', 'position', [.30 .30 .60 .40], 'menubar','none', 'name', 'Result');
-% subplot(1,2,1); vx(1) = imagesc(winner); colormap('gray');
-% set(gca, 'FontName', 'Arial', 'FontSize', 18);
-% ylabel('TR', 'fontsize', 18, 'fontweight', 'bold');
-% title('Best X So Far', 'fontsize', ceil(18*1.10), 'fontweight', 'bold');
-% subplot(1,2,2); vx(2) = imagesc(loser); colormap('gray');
-% set(gca, 'FontName', 'Arial', 'FontSize', 18);
-% ylabel('TR', 'fontsize', 18, 'fontweight', 'bold');
-% title('Worst X So Far', 'fontsize', ceil(18*1.10), 'fontweight', 'bold');
 
 %% Loop Over Remaining Generations %%
 for g = 2:ngen
