@@ -1,0 +1,441 @@
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+-->
+    <title>makeParametricModulator</title>
+    <meta name="generator" content="MATLAB 8.2">
+    <link rel="schema.DC" href="http://purl.org/dc/elements/1.1/">
+    <meta name="DC.date" content="2014-08-09">
+    <meta name="DC.source" content="makeParametricModulator.m">
+    <style type="text/css">
+    html,
+    body,
+    div,
+    span,
+    applet,
+    object,
+    iframe,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
+    p,
+    blockquote,
+    pre,
+    a,
+    abbr,
+    acronym,
+    address,
+    big,
+    cite,
+    code,
+    del,
+    dfn,
+    em,
+    font,
+    img,
+    ins,
+    kbd,
+    q,
+    s,
+    samp,
+    small,
+    strike,
+    strong,
+    sub,
+    sup,
+    tt,
+    var,
+    b,
+    u,
+    i,
+    center,
+    dl,
+    dt,
+    dd,
+    ol,
+    ul,
+    li,
+    fieldset,
+    form,
+    label,
+    legend,
+    table,
+    caption,
+    tbody,
+    tfoot,
+    thead,
+    tr,
+    th,
+    td {
+        margin: 10;
+        padding: 0;
+        border: 0;
+        outline: 0;
+        font-size: 100%;
+        vertical-align: baseline;
+        background: transparent
+    }
+    body {
+        line-height: 1
+    }
+    ol,
+    ul {
+        list-style: none
+    }
+    blockquote,
+    q {
+        quotes: none
+    }
+    blockquote:before,
+    blockquote:after,
+    q:before,
+    q:after {
+        content: '';
+        content: none
+    }
+    :focus {
+        outine: 0
+    }
+    ins {
+        text-decoration: none
+    }
+    del {
+        text-decoration: line-through
+    }
+    table {
+        border-collapse: collapse;
+        border-spacing: 0
+    }
+    html {
+        width: 100%;
+        height: 100%;
+        min-height: 100%;
+        margin-bottom: 0%;
+    }
+    html body {
+        height: 100%;
+        margin: 0px;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 12px;
+        color: #000;
+        line-height: 160%;
+        background: white none;
+        overflow-y: scroll;
+    }
+    html body td {
+        vertical-align: top;
+        text-align: left;
+    }
+    hr {
+        color: black;
+    }
+    h1 {
+        padding: 0px;
+        margin: 0px 0px 30px;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 1.6em;
+        color: #00274c;
+        line-height: 100%;
+        font-weight: bolder;
+    }
+    h2 {
+        padding: 0px;
+        margin: 25px 0px 8px;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 1.4em;
+        color: #000;
+        font-weight: bold;
+        line-height: 140%;
+        border-bottom: 3px solid #d6d4d4;
+        display: block;
+    }
+    h3 {
+        padding: 0px;
+        margin: 0px 0px 5px;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 1.2em;
+        color: #000;
+        font-weight: bold;
+        line-height: 140%;
+    }
+    a {
+        color: #005fce;
+        text-decoration: none;
+    }
+    a:hover {
+        color: #005fce;
+        text-decoration: underline;
+    }
+    a:visited {
+        color: #004aa0;
+        text-decoration: none;
+    }
+    p {
+        padding: 0px;
+        margin: 0px 0px 20px;
+    }
+    img {
+        padding: 10px;
+        margin: 0px 0px 20px;
+    }
+    p img,
+    pre img,
+    tt img,
+    li img {
+        margin-bottom: 0px;
+    }
+    ul {
+        padding: 0px;
+        margin: 0px 0px 20px 23px;
+        list-style: square;
+    }
+    ul li {
+        padding: 0px;
+        margin: 0px 0px 7px 0px;
+    }
+    ul li ul {
+        padding: 5px 0px 0px;
+        margin: 0px 0px 7px 23px;
+    }
+    ul li ol li {
+        list-style: decimal;
+    }
+    ol {
+        padding: 0px;
+        margin: 0px 0px 20px 0px;
+        list-style: decimal;
+    }
+    ol li {
+        padding: 0px;
+        margin: 0px 0px 7px 23px;
+        list-style-type: decimal;
+    }
+    ol li ol {
+        padding: 5px 0px 0px;
+        margin: 0px 0px 7px 0px;
+    }
+    ol li ol li {
+        list-style-type: lower-alpha;
+    }
+    ol li ul {
+        padding-top: 7px;
+    }
+    ol li ul li {
+        list-style: square;
+    }
+    .content {
+        font-size: 1.45em;
+        line-height: 140%;
+        padding: 20px;
+    }
+    pre,
+    tt,
+    code {
+        font-size: 12px;
+    }
+    pre {
+        margin: 0px 0px 20px;
+    }
+    pre.error {
+        color: red;
+    }
+    pre.codeinput {
+        padding: 10px;
+        border: 1px solid #d3d3d3;
+        background: #f7f7f7;
+    }
+    pre.codeoutput {
+        padding: 10px 11px;
+        margin: 0px 0px 20px;
+        color: #4c4c4c;
+    }
+    @media print {
+        pre.codeinput,
+        pre.codeoutput {
+            word-wrap: break-word;
+            width: 100%;
+        }
+    }
+    span.keyword {
+        color: #0000FF
+    }
+    span.comment {
+        color: #228B22
+    }
+    span.string {
+        color: #A020F0
+    }
+    span.untermstring {
+        color: #B20000
+    }
+    span.syscmd {
+        color: #B28C00
+    }
+    .footer {
+        width: auto;
+        padding: 10px 0px;
+        margin: 25px 0px 0px;
+        border-top: 1px dotted #878787;
+        font-size: 1.0em;
+        line-height: 140%;
+        font-style: italic;
+        color: #878787;
+        text-align: left;
+        float: none;
+    }
+    .footer p {
+        margin: 0px;
+    }
+    .footer a {
+        color: #878787;
+    }
+    .footer a:hover {
+        color: #878787;
+        text-decoration: underline;
+    }
+    .footer a:visited {
+        color: #878787;
+    }
+    table th {
+        padding: 7px 5px;
+        text-align: left;
+        vertical-align: middle;
+        border: 1px solid #d6d4d4;
+        font-weight: bold;
+    }
+    table td {
+        padding: 7px 5px;
+        text-align: left;
+        vertical-align: top;
+        border: 1px solid #d6d4d4;
+    }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h2>Numerical Optimization of Event-Related Designs</h2>
+        <p>Here you'll learn to use a program called OptimizeXGUI.m to optimize a complex, randomized event-related design that contains multiple event types (i.e., conditions). This software is specifically designed for optimizing the detection of specific linear contrasts of interest (i.e., activation differences). Most importantly, it (hopefully) will be easy for you to use, leaving you with no excuse for not optimizing your design for your next event-related study. In addition, you should check out Tor Wager's<a href="http://wagerlab.colorado.edu/tools">Design Optimization software,</a>which is more powerful than this software but requires more MATLAB experience and time to be able to use effectively.<p> 
+        <p>To get started, go ahead and run the program in a MATLAB command window: 
+        </p><pre class="codeinput">
+        optimizeXGUI;               <span class="comment">% make sure you're in the right directory</span></pre>
+        <p>You should now see the main input dialogue:</p>
+        <img vspace="5" hspace="5" src="html/optimizexgui_main_labeled.jpg" alt="" height=600px>
+        <p>Feel free to create your own unique design by modifying the inputs. Or, you can just use the "default" values to proceed on to the next step, which is to tell the software which contrasts you care most about:</p>
+        <img vspace="5" hspace="5" src="html/optimizexgui_main_contrasts.jpg" alt="" height=300px>
+        <p>That's it! The software will do the rest of the work, some of which you can see in the MATLAB command window:</p>
+        <img vspace="5" hspace="5" src="html/optimizexgui_output.jpg" alt="" height=400px>
+        <p>Once it finishes, you should see a figure pop up showing you the most efficient design matrix:</p>
+        <img vspace="5" hspace="5" src="html/optimizexgui_bestx.jpg" alt="" height=300px>
+        <p>In addition, you should see a new folder in the directory in which you ran the program. Inside that directory are .csv files (and .txt files, which can be read a bit easier back into MATLAB) like this:</p> 
+        <img vspace="5" hspace="5" src="html/optimizexgui_csv.jpg" alt="" height=300px>
+        <p>For most applications, this should be all of the information you need to implement your experiment, and to do so in a manner that is optimal given the contrasts you care about. Of course, you might want to think about running the software for more than a minute if you do decide to use this for a study! There is no hard-and-fast rule for how long you do need to run it, but it wouldn't hurt (presumably) to run it overnight.</p>
+        <p class="footer">
+            <br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2013b</a>
+            <br>
+        </p>
+    </div>
+    <!--
+##### SOURCE BEGIN #####
+clear all; close all; 
+% Parametric Modulation
+% In SPM, a parametric modulation regressor is used to predict variability in
+% the strength (that is, height/amplitude) of the neural response across
+% different instances of the same condition. To construct such a regressor,
+% we first need to construct a regressor that represents the mean or
+% time-invariant neural response to the condition:
+nTR = 100;                  % number of TRs
+onsets = [5 25 45 65 85];   % trial onsets (in TRs)
+ME = zeros(nTR,1);  % creates a vector of 100 TRs (all zeros for now)
+ME(onsets) = 1;     % puts 1s where trial onsets occur
+
+
+% 
+% Convolve with a hemodynamic respones function to get a BOLD prediction
+figure('color', 'white', 'units', 'normal', 'position',[.2 .2 .5 .25]);
+plot(ME, '-', 'LineWidth', 2, 'Color', [0 0 0]); hold on; 
+axis([0 nTR+1 -.15 1.15]); box off; 
+xlabel(gca, 'TR', 'fontname', 'Arial', 'fontsize', 12, 'fontweight', 'bold');
+ylabel(gca, 'Predicted Response', 'fontsize', 12, 'fontweight', 'bold'); hold on; 
+
+
+% 
+% Convolve with a hemodynamic respones function to get a BOLD prediction
+bf = spm_hrf(2);    % define the basis function
+cME = conv(bf,ME);  % convolve mian effect with basis function
+cME = cME(1:nTR);   % remove extra values added by convolution
+cME = cME/max(cME); % puts on scale comparable to main effect
+
+plot(cME, '-', 'LineWidth', 2, 'Color', 'r'); 
+
+% 
+% Now, use a parameter to create a new regressor that modulates the height
+% of the main effect regressor
+parameter = [5 3 1 7 1.5]; % the parameter (size corresponds to onsets)
+PM = zeros(nTR,1);  % creates a vector of 100 TRs (all zeros for now)
+PM(onsets) = parameter/max(parameter); % puts same scale as main effect
+
+figure('color', 'white', 'units', 'normal', 'position',[.2 .2 .5 .25]);
+plot(PM, '-', 'LineWidth', 2, 'Color', [0 0 0]); hold on; 
+axis([0 nTR+1 -.15 1.15]); box off; 
+xlabel(gca, 'TR', 'fontname', 'Arial', 'fontsize', 12, 'fontweight', 'bold');
+ylabel(gca, 'Predicted Response', 'fontsize', 12, 'fontweight', 'bold'); hold on; 
+
+% 
+% Convolve with a hemodynamic respones function to get a BOLD prediction
+cPM = conv(bf,PM);
+cPM = cPM(1:100);
+cPM = cPM/max(cPM);
+
+plot(cPM, '-', 'LineWidth', 2, 'Color', 'r'); 
+
+% 
+% But wait, there's a problem here. The parametric modulation regressor is
+% highly correlated with the main effect regressor: 
+figure('color', 'white', 'units', 'normal', 'position',[.2 .2 .5 .25]);
+plot(cME, '-', 'LineWidth', 2, 'Color', 'r'); hold on; 
+axis([0 nTR+1 -.15 1.15]); box off; 
+xlabel(gca, 'TR', 'fontname', 'Arial', 'fontsize', 15, 'fontweight', 'bold');
+ylabel(gca, 'Predicted Response', 'fontsize', 15, 'fontweight', 'bold'); hold on; 
+plot(cPM-.025, '-', 'LineWidth', 2, 'Color', 'b'); 
+title(gca, sprintf('Predictor Correlation = %2.4f', corr(cPM, cME)), 'fontsize', 18, 'fontweight', 'bold'); 
+legend(gca, {'Average Effect' 'Parametric Effect'}, 'fontsize', 15);
+
+
+%
+% Highly collinear regressors like this are highly problematic for
+% regression models. Fortunately, We can eliminate this correlation by
+% orthogonalizing the parameter before modulating the height of the main
+% effect. The easiest way to do this is to simply d-mean the parameter,
+% i.e., subtract out the mean from every value so that it is centered
+% around 0:
+oparameter = parameter - mean(parameter); % de-mean the parameter
+oPM = zeros(nTR, 1); % another vector of zeros
+oPM(onsets) = oparameter/max(oparameter); % re-scale
+coPM = conv(bf,oPM); % convolve
+coPM = coPM(1:100); % remove extra values
+coPM = coPM/max(coPM); % re-scale
+
+% 
+% We'e eliminated the problem, so says the CORR function MATLAB: 
+figure('color', 'white', 'units', 'normal', 'position',[.2 .2 .5 .25]);
+plot(cME, '-', 'LineWidth', 2, 'Color', 'r'); hold on; 
+xlabel(gca, 'TR', 'fontname', 'Arial', 'fontsize', 15, 'fontweight', 'bold');
+ylabel(gca, 'Predicted Response', 'fontsize', 15, 'fontweight', 'bold'); hold on; 
+plot(coPM-.025, '-', 'LineWidth', 2, 'Color', 'b'); hold on; 
+axis([0 nTR+1 min(coPM)-.10 1.15]); box off; 
+title(gca, sprintf('Predictor Correlation = %2.4f', corr(coPM, cME)), 'fontsize', 18, 'fontweight', 'bold'); 
+legend(gca, {'Average Effect' 'Parametric Effect'}, 'fontsize', 15);
+##### SOURCE END #####
+-->
+</body>
+
+</html>
