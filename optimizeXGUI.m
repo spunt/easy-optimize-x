@@ -35,9 +35,9 @@ try
     {'High-Pass Filter Cutoff (s)'; 'hpf'}, 100, ...'
     'separator'             ,       'Task Settings', ...
     {'N Conditions';'nconds'}                       ,       4, ...
-    {'N Trials Per Condition';'trialsPerCond'}      ,       '20 25 20 25', ...
+    {'N Trials Per Condition';'trialsPerCond'}      ,       '25 25 25 25', ...
+    {'N Intervals to Balance'; 'counterBalanceOrder'},     2, ...
     {'Maximum Block Size'; 'maxRep'}    ,       3, ...
-    {'Counterbalance Order'; 'counterBalanceOrder'},     0, ...
     'separator'             ,       'Timing (s)', ...
     {'Trial Duration'; 'trialDur'}, 2, ...
     {'Mean ISI';'meanISI'}          ,       3, ...
@@ -47,8 +47,8 @@ try
     {'Time after last trial'; 'restEnd'}, 10, ...
     'separator'             ,       'Optimization Settings', ...
     {'N Designs to Save'; 'keep'},      5, ...
-    {'N Generations to Run';'ngen'}            ,       50, ...
-    {'N Designs Per Generation';'gensize'}            ,       1000, ...
+    {'N Generations to Run';'ngen'}            ,       100, ...
+    {'N Designs Per Generation';'gensize'}            ,       500, ...
     {'Max Time to Run (minutes)';'maxtime'}            ,       .5);
 catch err
     rethrow err
@@ -168,10 +168,16 @@ if length(conWeights)~=size(L,2), error('# of contrast weights does not equal # 
 fprintf('\nDesign Optimization Started %s on %s', t, d); 
 fprintf('\n\n\tDESIGN PARAMETERS\n');
 disp(params)
-tic; % start the timer
 
+%% Start the Progress Monitor %%
+progstr = sprintf('Generation %%0%dd/%d', length(num2str(ngen)), ngen); 
+tic; % start the timer
+h = waitbar(1/ngen,sprintf(progstr, 1),'Name','optimizeXGUI Progress', ...
+    'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+setappdata(h,'canceling',0)
+    
 %% Create First Generation %%
-fprintf('\nGeneration 001/%03d ', ngen);
+fprintf(sprintf(['\n' progstr ' '], 1));
 efficiency = zeros(gensize,1);
 order = cell(gensize,1);
 jitter = cell(gensize,1);
@@ -188,15 +194,19 @@ for i = 1:gensize
     order{i} = d.combined(:,2);
     jitter{i} = d.combined(:,5);
     if ismember(i,genbins), fprintf('.'), end
-
+    
 end
 fprintf(' Max Efficiency = %2.15f', max(efficiency));
 maxgeneff(1) = max(efficiency);
 
 %% Loop Over Remaining Generations %%
 for g = 2:ngen
-
-    fprintf('\nGeneration %03d/%03d ', g, ngen);
+    
+    fprintf(sprintf(['\n' progstr ' '], g))
+    waitbar(g/ngen, h, sprintf(progstr, g)); 
+    
+    %% Check for Cancel button press
+    if getappdata(h,'canceling'), break; end
     
     %% Grab the Alphas %%
     tmp = sortrows([(1:length(efficiency))' efficiency], -2);
@@ -233,6 +243,9 @@ for g = 2:ngen
 
     end
     
+    %% Check for Cancel button press
+    if getappdata(h,'canceling'), break; end
+    
     %% Introduce Some Nasty Mutants %%
     if g>2 && maxgeneff(g-1)==maxgeneff(g-2)
         mutsize = gensize;
@@ -256,7 +269,7 @@ for g = 2:ngen
         if ismember(i,genbins), fprintf('.'), end
     end
     
-     %% Combine this Genertation and Compute Max Efficiency %%
+    %% Combine this Genertation and Compute Max Efficiency %%
     efficiency = [fit.efficiency; cross.efficiency; mut.efficiency];
     order = [fit.order; cross.order; mut.order];
     jitter = [fit.jitter; cross.jitter; mut.jitter];
@@ -266,10 +279,13 @@ for g = 2:ngen
     %% Break if Over Time %%
     if toc>=maxtime*60, break, end
     
+    %% Check for Cancel button press
+    if getappdata(h,'canceling'), break; end
+    
+    
 end
-
+delete(h)
 %% Save Best Designs %%
-
 [d, t] = get_timestamp;
 outdir = sprintf('best_designs_%s_%s', d, t); mkdir(outdir);
 fprintf('\n\nSaving %d best designs to: %s\n', keep, fullfile(pwd, outdir));
@@ -450,7 +466,94 @@ end
 % * SUBFUNCTIONS (ORDERING) 
 % *
 % =========================================================================
-function order = make_order(condtrials, maxrep, cborder)
+function ordervec = make_order(condtrials, maxrep, cbinterval, cborder)
+% MAKE_ORDER Make trial order w/optional counterbalancing
+%
+%   USAGE:  [ordervec, orderbinmat] = make_order(condtrials, maxrep, [cbinterval], [cborder])
+%
+%   ARGUMENTS
+%    condtrials = vector whose length corresponds to the number of
+%       conditions and whose values correspond to the number of trials per
+%       condition. For example, [10 10 15] indicates that there are 3
+%       conditions, with conditions 1 and 2 featuring 10 trials and
+%       condition 3 featuring 15 trials.
+%    maxrep = scalar that indicate the maximum number of times a trial
+%       is allowed to be repeated on consecutive trials. Use to control the
+%       extent to which trials from the same condition can be blocked.
+%    cbinterval = counterbalancing across equal intervals
+%       0 or 1 (default) = none
+%       > 1 = will divide into equal intervals of the specified size, e.g.,
+%       2 will counterbalance across first and second half
+%       4 will counterbalance across quartiles       
+%    cborder = order of m-seq counterbalancing (0 for none)
+%       
+%
+
+% --------------------------------------- Copyright (C) 2014 ---------------------------------------
+%	Author: Bob Spunt
+%	Affilitation: Caltech
+%	Email: spunt@caltech.edu
+%
+%	$Revision Date: Aug_20_2014
+if nargin < 2, error('USAGE: [ordervec, orderbinmat] = make_order(condtrials, maxrep,  [cbinterval], [cborder])'); end
+if nargin < 3, cbinterval = 0; end
+if nargin < 4, cborder = 0; end
+if maxrep==1, error('maxrep must be greater than 1'); end
+ncond = length(condtrials);
+ntrials = sum(condtrials); 
+ntrialsmax = ncond*max(condtrials);
+if cbinterval > 1
+    qt = 0:(1/cbinterval):1;
+    goodn = [floor(condtrials/cbinterval); ceil(condtrials/cbinterval)]; 
+    qidx1 = ceil(quantile(1:ntrials, qt(1:end-1))); 
+    qidx2 = [qidx1(2:end)-1 ntrials];
+end
+if cborder
+    seqrep = 0;
+    tmp = 0; 
+    while length(tmp) < ntrialsmax
+        seqrep = seqrep + 1; 
+        tmp = carryoverCounterbalance(ncond, cborder, seqrep);
+    end  
+    move_on = 0; 
+    while ~move_on
+        move_on = 1; 
+        seq = carryoverCounterbalance(ncond, cborder, seqrep)';
+        for i = 1:ncond
+            condseq = find(seq==i);
+            seq(condseq(condtrials(i)+1:end)) = NaN;
+        end
+        tmp = seq(~isnan(seq));
+        if any(getchunks(tmp) > maxrep), move_on = 0; continue; end
+        if cbinterval > 1
+            orderbinmat = repmat(tmp, 1, ncond)==repmat(1:ncond, ntrials, 1);
+            for i = 1:cbinterval
+                if ~all(sum(repmat(sum(orderbinmat(qidx1(i):qidx2(i), :)), size(goodn, 1), 1)==goodn))
+                    move_on = 0; continue; end
+            end
+        end
+    end
+    ordervec = tmp;
+else
+    ordervec = [];
+    for i = 1:ncond, ordervec = [ordervec; repmat(i, condtrials(i), 1)]; end
+    move_on = 0;
+    while ~move_on
+        move_on = 1; 
+        tmp = ordervec(randperm(ntrials)); 
+        if any(getchunks(tmp) > maxrep), move_on = 0; continue; end
+        if cbinterval > 1
+            orderbinmat = repmat(tmp, 1, ncond)==repmat(1:ncond, ntrials, 1);
+            for i = 1:cbinterval
+                if ~all(sum(repmat(sum(orderbinmat(qidx1(i):qidx2(i), :)), size(goodn, 1), 1)==goodn))
+                    move_on = 0; continue; end
+            end
+        end
+    end
+    ordervec = tmp; 
+end
+end
+function order = make_order_old(condtrials, maxrep, cborder)
 if nargin < 3, error('USAGE: order = make_order(condtrials, maxrep, cborder)'); end
 if maxrep==1, error('maxrep must be greater than 1'); end
 ncond = length(condtrials);
