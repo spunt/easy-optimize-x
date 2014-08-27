@@ -31,13 +31,13 @@ try
 [params, button] = settingsdlg(...
     'title'                 ,       'OptimizeX Settings', ...
     'separator'                ,   'General Settings', ...
-    {'TR (s)'; 'TR'}, 1, ...
+    {'TR (s)'; 'TR'}, 2, ...
     {'High-Pass Filter Cutoff (s)'; 'hpf'}, 100, ...'
     'separator'             ,       'Task Settings', ...
     {'N Conditions';'nconds'}                       ,       4, ...
-    {'N Trials Per Condition';'trialsPerCond'}      ,       '25 25 25 25', ...
+    {'N Trials Per Condition';'trialsPerCond'}      ,       '20 25 20 25', ...
     {'Maximum Block Size'; 'maxRep'}    ,       3, ...
-    {'Order of Counterbalancing'; 'counterBalanceOrder'},     0, ...
+    {'Counterbalance Order'; 'counterBalanceOrder'},     0, ...
     'separator'             ,       'Timing (s)', ...
     {'Trial Duration'; 'trialDur'}, 2, ...
     {'Mean ISI';'meanISI'}          ,       3, ...
@@ -46,10 +46,10 @@ try
     {'Time before first trial'; 'restBegin'}, 10, ...
     {'Time after last trial'; 'restEnd'}, 10, ...
     'separator'             ,       'Optimization Settings', ...
-    {'N Designs to Save'; 'keep'},      2, ...
+    {'N Designs to Save'; 'keep'},      5, ...
     {'N Generations to Run';'ngen'}            ,       50, ...
-    {'N Designs Per Generation';'gensize'}            ,       500, ...
-    {'Max Time to Run (minutes)';'maxtime'}            ,       2);
+    {'N Designs Per Generation';'gensize'}            ,       1000, ...
+    {'Max Time to Run (minutes)';'maxtime'}            ,       .5);
 catch err
     rethrow err
 end   
@@ -157,7 +157,7 @@ halfgen = gensize/2;
 L(:,end+1) = 0;
 L = L';
 ncontrasts = size(L,2);
-genbins = gensize/10:gensize/10:gensize;
+ngenbin = 10; 
 
 %% Check Settings %%
 if size(L,1)~=params.nconds+1, error('# of columns in contrast matrix ''L'' does not equal # of conditions defined in params'); end
@@ -175,6 +175,7 @@ fprintf('\nGeneration 001/%03d ', ngen);
 efficiency = zeros(gensize,1);
 order = cell(gensize,1);
 jitter = cell(gensize,1);
+genbins = floor(gensize/ngenbin:gensize/ngenbin:gensize);
 for i = 1:gensize
     
     d=makeX(params);
@@ -208,6 +209,7 @@ for g = 2:ngen
     cross.efficiency = zeros(halfgen,1);
     cross.order = cell(halfgen,1);
     cross.jitter = cell(halfgen,1);
+    genbins = floor(halfgen/(ngenbin/2):halfgen/(ngenbin/2):halfgen);
     for i = 1:halfgen
         
         %% Combine Orders %%
@@ -240,6 +242,7 @@ for g = 2:ngen
     mut.efficiency = zeros(mutsize,1);
     mut.order = cell(mutsize,1);
     mut.jitter = cell(mutsize,1);
+    genbins = floor(mutsize/(ngenbin/2):mutsize/(ngenbin/2):mutsize);
     for i = 1:mutsize
         d=makeX(params);
         X=d.X;
@@ -266,8 +269,10 @@ for g = 2:ngen
 end
 
 %% Save Best Designs %%
+
 [d, t] = get_timestamp;
 outdir = sprintf('best_designs_%s_%s', d, t); mkdir(outdir);
+fprintf('\n\nSaving %d best designs to: %s\n', keep, fullfile(pwd, outdir));
 tmp = sortrows([(1:length(efficiency))' efficiency], -2);
 fitidx = tmp(1:keep,1);
 best.efficiency = efficiency(fitidx);
@@ -283,7 +288,7 @@ for i = 1:keep
     writedesign(cc, fname2); 
 end
 save([outdir filesep 'designinfo.mat'], 'design', 'params');
-fprintf('\n\nFinished in %d minutes at %s on %s\n\n', round(toc/60), t, d);
+fprintf('Finished in %2.2f minutes at %s on %s\n\n', toc/60, t, d);
 
 %% Visualize the Best Design
 figure('color', 'white', 'units', 'normal', 'position', [.30 .30 .30 .40]); 
@@ -2218,6 +2223,7 @@ for r = 1:nrow
 end
 fclose(fid);
 end
+
 
 
 
