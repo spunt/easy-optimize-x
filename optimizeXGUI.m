@@ -132,9 +132,7 @@ TReff = params.TReff;
 
 mu = TReff:TReff:meanISI; 
 jitSample = zeros(1000,length(mu)); 
-for s = 1:length(mu)
-    jitSample(:,s) = random('Rayleigh', mu(s), 1000, 1);
-end
+for s = 1:length(mu), jitSample(:,s) = random('Rayleigh', mu(s), 1000, 1); end
 jitSample(jitSample<minISI) = NaN; 
 jitSample(jitSample>maxISI) = NaN;
 jitdist = abs(meanISI - nanmean(jitSample));
@@ -466,7 +464,7 @@ end
 % * SUBFUNCTIONS (ORDERING) 
 % *
 % =========================================================================
-function ordervec = make_order(condtrials, maxrep, cbinterval, cborder)
+function ordervec   = make_order(condtrials, maxrep, cbinterval, cborder)
 % MAKE_ORDER Make trial order w/optional counterbalancing
 %
 %   USAGE:  [ordervec, orderbinmat] = make_order(condtrials, maxrep, [cbinterval], [cborder])
@@ -553,7 +551,7 @@ else
     ordervec = tmp; 
 end
 end
-function order = make_order_old(condtrials, maxrep, cborder)
+function order      = make_order_old(condtrials, maxrep, cborder)
 if nargin < 3, error('USAGE: order = make_order(condtrials, maxrep, cborder)'); end
 if maxrep==1, error('maxrep must be greater than 1'); end
 ncond = length(condtrials);
@@ -678,7 +676,7 @@ else
  end
 end;
 end
-function [seq] = eulerPathKandelMethod_carryoverCounterbalance(adjacencyMatrix)
+function [seq]      = eulerPathKandelMethod_carryoverCounterbalance(adjacencyMatrix)
 % Finds an Euler circuit through a graph, G, and returns sequence of nodes
 % associated with that path. Based on method by Kandel, et al. (1996).
 % The circuit/path created is uniformly drawn from the set of all possible
@@ -792,7 +790,7 @@ while sum(cellfun('length',outEdgesOrder)) > 0
  end
 end
 end
-function arb = arborescenceKandel_carryoverCounterbalance(adjacencyMatrix)
+function arb        = arborescenceKandel_carryoverCounterbalance(adjacencyMatrix)
 %%% FIND UNIFORMLY-DRAWN ARBORESCENCE for the graph specified by the adjacency matrix
 %%% in the input. Do this by performing a backward random walk
 %%% on the graph...based on Kandel et al. (1996)
@@ -868,7 +866,7 @@ while length(unique(nodesVisited)) < size(adjacencyMatrix,1)
  currentNode = selectedSource;
 end
 end
-function result = nTuples_brooks(numItems,n)
+function result     = nTuples_brooks(numItems,n)
 %
 % Create all possible nTuples of length n from a list of items of length =
 % numItems
@@ -904,7 +902,7 @@ for v = 1:numItems^n
  end
 end
 end
-function result = nTuples_removeSelfAdjacencies_brooks(nTuplesList)
+function result     = nTuples_removeSelfAdjacencies_brooks(nTuplesList)
 %
 % VERSION: 1.0.05.03.2012
 % by Joseph Brooks, UCL Institute of Cognitive Neuroscience
@@ -1443,7 +1441,7 @@ edit_bgcolor = 'White';
     end
     
 end
-function [day, time] = get_timestamp(varargin)
+function [day, time]        = get_timestamp(varargin)
 % GET_TIMESTAMP
 %
 %   USAGE: [day time] = get_timestamp
@@ -1455,7 +1453,7 @@ day = strtrim(datestr(now,'mmm_DD_YYYY'));
 time = strtrim(datestr(now,'HHMMSSPM'));
 
 end
-function out = scalemat(in)
+function out                = scalemat(in)
 % SCALEMAT Columnwise rescaling to min 0 and max 1
 %
 %   USAGE: out = scalemat(in)
@@ -1465,7 +1463,7 @@ if nargin<1, display('out = scalemat(in)'); return; end
 nrow = size(in, 1);
 out = (in - repmat(min(in), nrow, 1)) ./ (repmat(max(in), nrow, 1) - repmat(min(in), nrow, 1)); 
 end
-function [d, id] = getchunks(a, opt)
+function [d, id]            = getchunks(a, opt)
 
 %GETCHUNKS Get the number of repetitions that occur in consecutive chunks.
 %   C = GETCHUNKS(A) returns an array of n elements, where n is the number
