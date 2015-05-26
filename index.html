@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>easy-optimize-x by spunt</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">easy-optimize-x</h1>
+        <p class="header">GUI-based MATLAB software for optimizing the design of fMRI tasks</p>
+
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/spunt/easy-optimize-x/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/spunt/easy-optimize-x/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/spunt/easy-optimize-x">View On GitHub</a></li>
+        </ul>
+
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/spunt">spunt</a></p>
+
+
+      </header>
+      <section>
+        <h1>
+<a id="easy-optimize-x" class="anchor" href="#easy-optimize-x" aria-hidden="true"><span class="octicon octicon-link"></span></a>easy-optimize-x</h1>
+
+<h2>
+<a id="about" class="anchor" href="#about" aria-hidden="true"><span class="octicon octicon-link"></span></a>About</h2>
+
+<p>Here you'll learn to use a program called OptimizeXGUI.m to optimize a complex, randomized event-related design that contains multiple event types (i.e., conditions). This software is specifically designed for optimizing the detection of specific linear contrasts of interest (i.e., activation differences). Most importantly, it (hopefully) will be easy for you to use, leaving you with no excuse for not optimizing your design for your next event-related study. In addition, you should check out Tor Wager's <a href="http://wagerlab.colorado.edu/tools">Design Optimization software</a>, which is more powerful than this software but requires more MATLAB experience and time to be able to use effectively.</p>
+
+<h2>
+<a id="launching-optimizexgui" class="anchor" href="#launching-optimizexgui" aria-hidden="true"><span class="octicon octicon-link"></span></a>Launching <em>optimizeXGUI</em>
+</h2>
+
+<p>To get started, go ahead and run the program in a MATLAB command window (make sure you're in the right directory):</p>
+
+<pre><code>&gt;&gt; optimizeXGUI                    
+</code></pre>
+
+<p>You should now see the main input dialogue:</p>
+
+<p><img src="https://raw.githubusercontent.com/spunt/easy-optimize-x/master/html/optimizexgui_main_labeled.jpg" alt="Main Dialogue"></p>
+
+<p>Feel free to create your own unique design by modifying the inputs. Or, you can just use the "default" values to proceed on to the next step, which is to tell the software which contrasts you care most about:</p>
+
+<p><img src="https://raw.githubusercontent.com/spunt/easy-optimize-x/master/html/optimizexgui_main_contrasts.jpg" alt="Main Dialogue"></p>
+
+<p>That's it! The software will do the rest of the work, some of which you can see in the MATLAB command window:</p>
+
+<p><img src="https://raw.githubusercontent.com/spunt/easy-optimize-x/master/html/optimizexgui_output.jpg" alt="Main Dialogue"></p>
+
+<p>Once it finishes, you should see a figure pop up showing you the most efficient design matrix:</p>
+
+<p><img src="https://raw.githubusercontent.com/spunt/easy-optimize-x/master/html/optimizexgui_bestx.jpg" alt="Main Dialogue"></p>
+
+<p>In addition, you should see a new folder in the directory in which you ran the program. Inside that directory are .csv files (and .txt files, which can be read a bit easier back into MATLAB) like this:</p>
+
+<p><img src="https://raw.githubusercontent.com/spunt/easy-optimize-x/master/html/optimizexgui_csv.jpg" alt="Main Dialogue"></p>
+
+<p>For most applications, this should be all of the information you need to implement your experiment, and to do so in a manner that is optimal given the contrasts you care about. Of course, you might want to think about running the software for more than a minute if you do decide to use this for a study! There is no hard-and-fast rule for how long you do need to run it, but it wouldn't hurt (presumably) to run it overnight.</p>
+
+<h2>
+<a id="have-questions" class="anchor" href="#have-questions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Have Questions?</h2>
+
+<p>Feel free to shoot me (Bob) an email at: <a href="mailto:bobspunt@gmail.com">bobspunt@gmail.com</a></p>
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		
+  </body>
+</html>
