@@ -923,6 +923,334 @@ end
 end
 % =========================================================================
 % *
+% * SUBFUNCTIONS (SPM)
+% *
+% =========================================================================
+function [hrf,p]    = spm_hrf(RT,P,T)
+% Return a hemodynamic response function
+% FORMAT [hrf,p] = spm_hrf(RT,p,T)
+% RT   - scan repeat time
+% p    - parameters of the response function (two Gamma functions)
+%
+%                                                           defaults
+%                                                          (seconds)
+%        p(1) - delay of response (relative to onset)          6
+%        p(2) - delay of undershoot (relative to onset)       16
+%        p(3) - dispersion of response                         1
+%        p(4) - dispersion of undershoot                       1
+%        p(5) - ratio of response to undershoot                6
+%        p(6) - onset (seconds)                                0
+%        p(7) - length of kernel (seconds)                    32
+%
+% T    - microtime resolution [Default: 16]
+%
+% hrf  - hemodynamic response function
+% p    - parameters of the response function
+%__________________________________________________________________________
+% Copyright (C) 1996-2014 Wellcome Trust Centre for Neuroimaging
+
+% Karl Friston
+% $Id: spm_hrf.m 6108 2014-07-16 15:24:06Z guillaume $
+
+
+%-Parameters of the response function
+%--------------------------------------------------------------------------
+p   = [6 16 1 1 6 0 32];
+if nargin > 1, p(1:length(P)) = P; end
+
+%-Microtime resolution
+%--------------------------------------------------------------------------
+if nargin > 2, fMRI_T = T; else fMRI_T = 16; end
+
+%-Modelled hemodynamic response function - {mixture of Gammas}
+%--------------------------------------------------------------------------
+dt  = RT/fMRI_T;
+u   = [0:ceil(p(7)/dt)] - p(6)/dt;
+hrf = spm_Gpdf(u,p(1)/p(3),dt/p(3)) - spm_Gpdf(u,p(2)/p(4),dt/p(4))/p(5);
+hrf = hrf([0:floor(p(7)/RT)]*fMRI_T + 1);
+hrf = hrf'/sum(hrf);
+end
+function varargout  = spm_filter(K,Y)
+% Removes low frequency confounds X0
+% FORMAT [Y] = spm_filter(K,Y)
+% FORMAT [K] = spm_filter(K)
+%
+% K           - filter matrix or:
+% K(s)        - struct array containing partition-specific specifications
+%
+% K(s).RT     - observation interval in seconds
+% K(s).row    - row of Y constituting block/partition s
+% K(s).HParam - cut-off period in seconds
+%
+% K(s).X0     - low frequencies to be removed (DCT)
+%
+% Y           - data matrix
+%
+% K           - filter structure
+% Y           - filtered data
+%__________________________________________________________________________
+%
+% spm_filter implements high-pass filtering in an efficient way by
+% using the residual forming matrix of X0 - low frequency confounds
+%.spm_filter also configures the filter structure in accord with the
+% specification fields if called with one argument
+%__________________________________________________________________________
+% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+
+% Karl Friston
+% $Id: spm_filter.m 4498 2011-09-23 18:40:43Z guillaume $
+
+
+%-Configure filter
+%==========================================================================
+if nargin == 1 && isstruct(K)
+    
+    % set K.X0
+    %----------------------------------------------------------------------
+    for s = 1:length(K)
+        
+        % make high pass filter
+        %------------------------------------------------------------------
+        k       = length(K(s).row);
+        n       = fix(2*(k*K(s).RT)/K(s).HParam + 1);
+        X0      = spm_dctmtx(k,n);
+        K(s).X0 = X0(:,2:end);
+        
+    end
+    
+    % return filter structure
+    %----------------------------------------------------------------------
+    varargout = { K };
+    
+%-Apply filter
+%==========================================================================
+else
+    
+    % K is a filter structure
+    %----------------------------------------------------------------------
+    if isstruct(K)
+        
+        % ensure requisite fields are present
+        %------------------------------------------------------------------
+        if ~isfield(K(1),'X0')
+            K = spm_filter(K);
+        end
+        
+        if numel(K) == 1 && length(K.row) == size(Y,1)
+            
+            % apply high pass filter
+            %--------------------------------------------------------------
+            Y = Y - K.X0*(K.X0'*Y);
+            
+        else
+            
+            for s = 1:length(K)
+                
+                % select data
+                %----------------------------------------------------------
+                y = Y(K(s).row,:);
+                
+                % apply high pass filter
+                %----------------------------------------------------------
+                y = y - K(s).X0*(K(s).X0'*y);
+                
+                % reset filtered data in Y
+                %----------------------------------------------------------
+                Y(K(s).row,:) = y;
+                
+            end
+            
+        end
+        
+    % K is simply a filter matrix
+    %----------------------------------------------------------------------
+    else
+        
+        Y = K * Y;
+        
+    end
+    
+    % return filtered data
+    %----------------------------------------------------------------------
+    varargout = { Y };
+end
+end
+function C          = spm_dctmtx(N,K,n,f)
+% Creates basis functions for Discrete Cosine Transform.
+% FORMAT C = spm_dctmtx(N,K,n)
+%     OR C = spm_dctmtx(N,K)
+%     OR D = spm_dctmtx(N,K,n,'diff')
+%     OR D = spm_dctmtx(N,K,'diff')
+% N - dimension
+% K - order
+% n - optional points to sample
+%____________________________________________________________________________
+% spm_dctmtx creates a matrix for the first few basis functions of a one
+% dimensional discrete cosine transform.
+% With the 'diff' argument, spm_dctmtx produces the derivatives of the
+% DCT.
+%
+% See:    Fundamentals of Digital Image Processing (p 150-154).
+%         Anil K. Jain 1989.
+%____________________________________________________________________________
+% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+
+% John Ashburner
+% $Id: spm_dctmtx.m 1143 2008-02-07 19:33:33Z spm $
+
+
+d = 0;
+
+if nargin == 1, K = N; end;
+
+if any(nargin == [1 2]),
+    n = (0:(N-1))';
+elseif nargin == 3,
+    if strcmp(n,'diff'),
+        d = 1;
+        n = (0:(N-1))';
+    elseif strcmp(n,'diff2'),
+        d = 2;
+        n = (0:(N-1))';
+    else
+        n = n(:);
+    end
+elseif nargin == 4,
+    n = n(:);
+    if strcmp(f,'diff'),
+        d = 1;
+    elseif strcmp(f,'diff2'),
+        d = 2;
+    else
+        error('Incorrect Usage');
+    end
+else
+    error('Incorrect Usage');
+end
+
+C = zeros(size(n,1),K);
+
+if d == 0,
+    C(:,1)=ones(size(n,1),1)/sqrt(N);
+    for k=2:K
+        C(:,k) = sqrt(2/N)*cos(pi*(2*n+1)*(k-1)/(2*N));
+    end
+elseif d == 1,
+    for k=2:K
+        C(:,k) = -2^(1/2)*(1/N)^(1/2)*sin(1/2*pi*(2*n*k-2*n+k-1)/N)*pi*(k-1)/N;
+    end
+elseif d == 2,
+    for k=2:K,
+        C(:,k) = -2^(1/2)*(1/N)^(1/2)*cos(1/2*pi*(2*n+1)*(k-1)/N)*pi^2*(k-1)^2/N^2;
+    end;
+else
+    error('Can''t do this');
+end
+end
+function f          = spm_Gpdf(x,h,l)
+% Probability Density Function (PDF) of Gamma distribution
+% FORMAT f = spm_Gpdf(x,h,l)
+%
+% x - Gamma-variate   (Gamma has range [0,Inf) )
+% h - Shape parameter (h>0)
+% l - Scale parameter (l>0)
+% f - PDF of Gamma-distribution with shape & scale parameters h & l
+%__________________________________________________________________________
+%
+% spm_Gpdf implements the Probability Density Function of the Gamma
+% distribution.
+%
+% Definition:
+%--------------------------------------------------------------------------
+% The PDF of the Gamma distribution with shape parameter h and scale l
+% is defined for h>0 & l>0 and for x in [0,Inf) by: (See Evans et al.,
+% Ch18, but note that this reference uses the alternative
+% parameterisation of the Gamma with scale parameter c=1/l)
+%
+%           l^h * x^(h-1) exp(-lx)
+%    f(x) = ----------------------
+%                   gamma(h)
+%
+% Variate relationships: (Evans et al., Ch18 & Ch8)
+%--------------------------------------------------------------------------
+% For natural (strictly +ve integer) shape h this is an Erlang distribution.
+%
+% The Standard Gamma distribution has a single parameter, the shape h.
+% The scale taken as l=1.
+%
+% The Chi-squared distribution with v degrees of freedom is equivalent
+% to the Gamma distribution with scale parameter 1/2 and shape parameter v/2.
+%
+% Algorithm:
+%--------------------------------------------------------------------------
+% Direct computation using logs to avoid roundoff errors.
+%
+% References:
+%--------------------------------------------------------------------------
+% Evans M, Hastings N, Peacock B (1993)
+%       "Statistical Distributions"
+%        2nd Ed. Wiley, New York
+%
+% Abramowitz M, Stegun IA, (1964)
+%       "Handbook of Mathematical Functions"
+%        US Government Printing Office
+%
+% Press WH, Teukolsky SA, Vetterling AT, Flannery BP (1992)
+%       "Numerical Recipes in C"
+%        Cambridge
+%__________________________________________________________________________
+% Copyright (C) 1993-2011 Wellcome Trust Centre for Neuroimaging
+
+% Andrew Holmes
+% $Id: spm_Gpdf.m 4182 2011-02-01 12:29:09Z guillaume $
+
+
+%-Format arguments, note & check sizes
+%--------------------------------------------------------------------------
+if nargin<3, error('Insufficient arguments'), end
+
+ad = [ndims(x);ndims(h);ndims(l)];
+rd = max(ad);
+as = [[size(x),ones(1,rd-ad(1))];...
+      [size(h),ones(1,rd-ad(2))];...
+      [size(l),ones(1,rd-ad(3))]];
+rs = max(as);
+xa = prod(as,2)>1;
+if sum(xa)>1 && any(any(diff(as(xa,:)),1))
+    error('non-scalar args must match in size');
+end
+
+%-Computation
+%--------------------------------------------------------------------------
+%-Initialise result to zeros
+f = zeros(rs);
+
+%-Only defined for strictly positive h & l. Return NaN if undefined.
+md = ( ones(size(x))  &  h>0  &  l>0 );
+if any(~md(:))
+    f(~md) = NaN;
+    warning('Returning NaN for out of range arguments');
+end
+
+%-Degenerate cases at x==0: h<1 => f=Inf; h==1 => f=l; h>1 => f=0
+ml = ( md  &  x==0  &  h<1 );
+f(ml) = Inf;
+ml = ( md  &  x==0  &  h==1 ); if xa(3), mll=ml; else mll=1; end
+f(ml) = l(mll);
+
+%-Compute where defined and x>0
+Q  = find( md  &  x>0 );
+if isempty(Q), return, end
+if xa(1), Qx=Q; else Qx=1; end
+if xa(2), Qh=Q; else Qh=1; end
+if xa(3), Ql=Q; else Ql=1; end
+
+%-Compute
+f(Q) = exp( (h(Qh)-1).*log(x(Qx)) +h(Qh).*log(l(Ql)) - l(Ql).*x(Qx)...
+        -gammaln(h(Qh)) );
+end
+% =========================================================================
+% *
 % * SUBFUNCTIONS (UTILITIES)
 % *
 % =========================================================================
