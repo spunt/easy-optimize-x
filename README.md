@@ -1,12 +1,6 @@
-easy-optimize-x
-===============
+# easy-optimize-x
+GUI-based MATLAB software for optimizing the design of fMRI tasks. See [Help Page](http://spunt.github.io/easy-optimize-x) for usage instructions. 
 
-GUI-based MATLAB software for optimizing the design of fMRI tasks.
-
-Please see Instructions.html for usage instructions. 
-
-
-TO DO
-===============
-- add m-sequencing for trial counterbalancing
-- look into improving GA (potentially with turboGA.m from FEX)
+### to do
+* add m-sequencing for trial counterbalancing
+* look into improving GA (possibly with turboGA.m from MATLAB File Exchange)
