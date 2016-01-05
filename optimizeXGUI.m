@@ -32,8 +32,9 @@ function optimizeXGUI(varargin)
 try 
 %     cbintervalstr = {'None', '1st/2nd Half (2)', 'Tertiles (3)', 'Quartiles (4)', 'Quintiles (5)' , 'Sextile (6)', 'Septile (7)', 'Octile (8)', 'Decile (10)', 'Hexadecile (16)'};
 %     cbintervalnum = [1 2 3 4 5 6 7 8 10 16];
-    cbintervalstr = {'None', '1st/2nd Half (2)', 'Tertiles (3) [possibly slow]', 'Quartiles (4) [possibly very slow]'};
-    cbintervalnum = [1 2 3 4];
+%     cbintervalstr = {'None', '1st/2nd Half (2)', 'Tertiles (3) [possibly slow]', 'Quartiles (4) [possibly very slow]'};
+%     cbintervalnum = [1 2 3 4];
+%    {'Interval Counterbalancing'; 'counterBalanceInterval'},     cbintervalstr, ...
     [params, button] = settingsdlg(...
         'title'                 ,       'OptimizeX Settings', ...
         'separator'                ,   'General Settings', ...
@@ -42,7 +43,6 @@ try
         'separator'             ,       'Task Settings', ...
         {'N Conditions';'nconds'}                       ,       4, ...
         {'N Trials Per Condition';'trialsPerCond'}      ,       '25 25 25 25', ...
-        {'Interval Counterbalancing'; 'counterBalanceInterval'},     cbintervalstr, ...
         {'Maximum Block Size'; 'maxRep'}    ,       3, ...
         'separator'             ,       'Timing (s)', ...
         {'Trial Duration'; 'trialDur'}, 2, ...
@@ -57,20 +57,21 @@ try
         {'N Designs Per Generation';'gensize'}            ,       500, ...
         {'Max Time to Run (minutes)';'maxtime'}            ,       .5);
 catch err
-    rethrow err
+    error_handler(err);
 end   
-if strcmp(button, 'cancel') || isempty(button), return; end % canceled
-params.counterBalanceInterval   = cbintervalnum(strcmpi(cbintervalstr, params.counterBalanceInterval));
-params.trialsPerCond            = str2num(params.trialsPerCond); 
+if strcmpi(button, 'cancel') || isempty(button), return; end % canceled
+% params.counterBalanceInterval   = cbintervalnum(strcmpi(cbintervalstr, params.counterBalanceInterval));
+params.trialsPerCond            = str2num(params.trialsPerCond);
+params.counterBalanceInterval   = 0; 
 if length(params.trialsPerCond)==1, params.trialsPerCond = repmat(params.trialsPerCond, 1, params.nconds); 
 elseif length(params.trialsPerCond)~=params.nconds
     msg = sprintf('The number of entries in "N Trials Per Condition" does not match the number of conditions'); 
-    errordlg(msg);
+    headsup(msg, 'Invalid Input', 1);
     optimizeXGUI
 end
 if params.minISI > params.meanISI | params.maxISI < params.meanISI
     msg = sprintf('The ISI values you''ve specified look odd: Min ISI cannot be greater than the Mean ISI, and the Max ISI cannot be less than the Mean ISI'); 
-    errordlg(msg); 
+    headsup(msg, 'Invalid Input', 1);
     optimizeXGUI
 end
 
@@ -80,7 +81,7 @@ end
 [condata, button] = settingsdlg(...
     'title'                 ,       'Settings', ...
     {'How many contrasts of interest?';'ncontrast'}                    ,       1);
-if strcmp(button, 'cancel') || isempty(button), return; end
+if strcmpi(button, 'cancel') || isempty(button), return; end
 vec = repmat('0 ', 1, params.nconds);
 all = [];
 for c = 1:condata.ncontrast
@@ -93,7 +94,7 @@ end
 [data2, button] = settingsdlg(...
     'title', 'Contrast Specification', ...
     all{:}); 
-if strcmp(button, 'cancel') || isempty(button), return; end
+if strcmpi(button, 'cancel') || isempty(button), return; end
 con = struct2cell(data2); 
 params.L = [];
 convec = con(1:2:end);
@@ -208,7 +209,7 @@ function optimizeX(params)
     end
     fprintf(' Max Efficiency = %2.15f', max(efficiency));
     maxgeneff(1) = max(efficiency);
-    dfd
+
     %% Loop Over Remaining Generations %%
     for g = 2:ngen
 
@@ -3052,4 +3053,48 @@ if ~isempty(optargs)
 end
 for i = 1:size(defaults,1), assignin('caller', defaults{i,1}, defaults{i,2}); end
 if nargout>0, argstruct = cell2struct(defaults(:,2), defaults(:,1)); end
+end
+function h          = headsup(msg, titlestr, wait4resp)
+% HEADSUP Present message to user and wait for a response
+%
+%  USAGE: h = headsup(msg, *titlestr, *wait4resp)    *optional input
+% __________________________________________________________________________
+%  INPUTS
+%   msg: character array to present to user 
+%
+
+% ---------------------- Copyright (C) 2014 Bob Spunt ----------------------
+%	Created:  2014-09-30
+%	Email:    spunt@caltech.edu
+% __________________________________________________________________________
+if nargin < 1, disp('USAGE: h = headsup(msg, *titlestr, *wait4resp)'); return; end
+if nargin < 2, titlestr = 'Heads Up'; end
+if nargin < 3, wait4resp = 1; end
+if iscell(msg), msg = char(msg); end
+if iscell(titlestr), titlestr = char(titlestr); end
+h(1) = figure(...
+    'Units', 'norm', ...
+    'WindowStyle', 'modal', ...
+    'Position',[.425 .45 .15 .10],...
+    'Resize','off',...
+    'Color', [0.8941    0.1020    0.1098]*.60, ...
+    'NumberTitle','off',...
+    'DockControls','off',...
+    'Tag', 'headsup', ...
+    'MenuBar','none',...
+    'Name',titlestr,...
+    'Visible','on',...
+    'Toolbar','none');
+h(2) = uicontrol('parent', h(1), 'units', 'norm', 'style',  'text', 'backg', [0.8941    0.1020    0.1098]*.60,'foreg', [248/255 248/255 248/255], 'horiz', 'center', ...
+    'pos', [.050 .375 .900 .525], 'fontsize', 14, 'fontname', 'arial', 'fontw', 'bold', 'string', msg, 'visible', 'on'); 
+if wait4resp
+    h(3) = uicontrol('parent', h(1), 'units', 'norm', 'style', 'push', 'foreg', [0 0 0], 'horiz', 'center', ...
+    'pos', [.4 .075 .2 .30], 'fontname', 'arial', 'fontsize', 16, 'fontw', 'bold', 'string', 'OK', 'visible', 'on', 'callback', {@cb_ok, h});
+    uiwait(h(1)); 
+end
+drawnow; 
+end
+function cb_ok(varargin)
+    delete(findobj(0, 'Tag', 'headsup'));
+    drawnow; 
 end
