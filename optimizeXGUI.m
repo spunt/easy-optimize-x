@@ -1342,7 +1342,7 @@ function [settings, button] = settingsdlg(varargin)
 % E-mail     : oldenhuis@gmail.com    (personal)
 %              oldenhuis@luxspace.lu  (professional)
 % Affiliation: LuxSpace s?rl
-% Licence    : BSD
+% Licence    : BSDnar
 
 
 % Changelog
@@ -1368,7 +1368,9 @@ function [settings, button] = settingsdlg(varargin)
         
     % errortraps
     narg = nargin;
-    error(nargchk(1, inf, narg, 'struct'));
+    if narg < 1, error('FEED ME MORE INPUTS, SEYMOUR!'); end
+% 
+%     error(narginchk(1, inf, narg, 'struct'));
         
     % parse input (+errortrap) 
     have_settings = 0;
@@ -1867,7 +1869,8 @@ function [d, id]            = getchunks(a, opt)
 %--------------------------------------------------------------------------
 % Error checking
 %--------------------------------------------------------------------------
-error(nargchk(1, 2, nargin));
+% error(nargchk(1, 2, nargin));
+if nargin < 1, error('FEED ME MORE INPUTS, SEYMOUR!'); end
 if ndims(a) > 2 || min(size(a)) > 1
   error('Input must be a 2-D vector');
 end
