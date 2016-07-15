@@ -3057,6 +3057,12 @@ end
 for i = 1:size(defaults,1), assignin('caller', defaults{i,1}, defaults{i,2}); end
 if nargout>0, argstruct = cell2struct(defaults(:,2), defaults(:,1)); end
 end
+function mfile_showhelp(varargin)
+% MFILE_SHOWHELP
+ST = dbstack('-completenames');
+if isempty(ST), fprintf('\nYou must call this within a function\n\n'); return; end
+eval(sprintf('help %s', ST(2).file));  
+end
 function h          = headsup(msg, titlestr, wait4resp)
 % HEADSUP Present message to user and wait for a response
 %
