@@ -1,4 +1,4 @@
-function optimizeXGUI(varargin)
+function optimizeXGUI(params)
 % OPTIMIZEXGUI
 %
 % Run this function at the command line to open the GUI. Once the design
@@ -25,6 +25,31 @@ function optimizeXGUI(varargin)
 % Contact: bobspunt@gmail.com
 % Current Version: 20160104
 %
+if nargin==0, params = getParams; end
+
+% =========================================================================
+% Run defineX.m
+% =========================================================================
+params = defineX(params);
+
+% =========================================================================
+% Run optimizeX.m
+% =========================================================================
+try
+    optimizeX(params);
+    delete(findall(0, 'Name','optimizeXGUI Progress'));
+catch err
+    error_handler(err);
+    delete(findall(0, 'Name','optimizeXGUI Progress'));
+end
+
+end
+% =========================================================================
+% *
+% * SUBFUNCTIONS (PRIMARY)
+% *
+% =========================================================================
+function params = getParams
 
 % =========================================================================
 % Request Major Settings from User
@@ -107,26 +132,14 @@ for c = 1:length(conweight)
 end
 
 % =========================================================================
-% Run defineX.m
+% Save Design Parameters
 % =========================================================================
-params = defineX(params);
+[d, t]  = get_timestamp;
+outfile = sprintf('design_params_%s_%s.mat', d, t);
+fprintf('\nParameters saved in %s\n', fullfile(pwd, outfile));
+save(fullfile(pwd, outfile), 'params');
 
-% =========================================================================
-% Run optimizeX.m
-% =========================================================================
-try
-    optimizeX(params);
-catch err
-    error_handler(err);
-    delete(findall(0, 'Name','optimizeXGUI Progress'));
 end
-        
-end
-% =========================================================================
-% *
-% * SUBFUNCTIONS (PRIMARY)
-% *
-% =========================================================================
 function params = defineX(params)
 
 % Pulse Sequence Parameters
@@ -137,12 +150,34 @@ params.ntrials=sum(params.trialsPerCond);  % computes total number of trials
 params.scan_length=ceil((params.restBegin + params.restEnd + params.ntrials*(params.meanISI+params.trialDur))/params.TR);  % computes total scan length (in TRs)
 params.TReff=params.TR/params.nslices;            % computes effective TR
 
+
+%% Verify that valid order can be made with specified max reps %%
+fprintf('\nVerifying efficiency of creating valid trial orders with current parameters... ');
+tic; % start the timer
+order = [];
+for i = 1:params.nconds, order = [order; repmat(i, params.trialsPerCond(i), 1)]; end
+move_on = 0;
+maxtesttime = 5; 
+while ~move_on
+    tmp = order(randperm(params.ntrials)); 
+    nchunk = getchunks(tmp); 
+    if ~any(nchunk>params.maxRep)
+        move_on = 1; 
+    elseif toc>=maxtesttime
+        fprintf('FAIL\n\n');
+        error('Current parameters prevent efficient creation of valid trial orders. Try increasing Maximum Block Size parameter.'); 
+    end
+end
+order = tmp; 
+% if toc>=maxtime*60, break, end
+fprintf('SUCCESS\n');
+
 % Get ISI distribution %
+fprintf('\nCreating base distirbution of ISIs... ');
 minISI = params.minISI;
 maxISI = params.maxISI;
 meanISI = params.meanISI;
 TReff = params.TReff;
-
 mu = TReff:TReff:meanISI; 
 jitSample = zeros(1000,length(mu)); 
 for s = 1:length(mu), jitSample(:,s) = random('Rayleigh', mu(s), 1000, 1); end
@@ -152,7 +187,7 @@ jitdist = abs(meanISI - nanmean(jitSample));
 minIDX = find(jitdist==min(jitdist));
 params.jitSample = jitSample(:,minIDX(1));
 params.jitSample(isnan(params.jitSample)) = []; 
-
+fprintf('SUCCESS\n');
 end
 function optimizeX(params)
 
@@ -193,9 +228,10 @@ function optimizeX(params)
     order = cell(gensize,1);
     jitter = cell(gensize,1);
     genbins = floor(gensize/ngenbin:gensize/ngenbin:gensize);
+    
     for i = 1:gensize
 
-        d=makeX(params);
+        d = makeX(params);
         X=d.X;
         X(:,end+1) = 1;
         for c = 1:ncontrasts
@@ -318,20 +354,29 @@ function optimizeX(params)
     fprintf('Finished in %2.2f minutes at %s on %s\n\n', toc/60, t, d);
 
     %% Visualize the Best Design
-    figure('color', 'white', 'units', 'normal', 'position', [.30 .30 .30 .40]); 
+    
+    hfig = figure('color', 'white', 'units', 'norm', 'pos', [.3 .3 .3 .4]);
+    hax = axes(hfig);
     winner = scalemat(design{1}.X);
     winner = [winner ones(size(winner,1), 1)];
-    imagesc(winner); colormap('gray');
-    set(gca, 'FontName', 'Arial', 'FontSize', 18, 'XTick', 1:size(winner,2));
-    xticklabel = strcat({'cond'}, get(gca, 'XTickLabel')); 
+    h = imagesc(winner, 'parent', hax); colormap('gray');
+    set(hax, 'FontName', 'Arial', 'FontSize', 18, 'XTick', 1:size(winner,2));
+    xticklabel = strcat({'cond'}, get(hax, 'XTickLabel')); 
     xticklabel{end} = 'constant';
-    set(gca, 'xticklabel', xticklabel); 
+    set(hax, 'xticklabel', xticklabel); 
     ylabel('TR', 'fontsize', 18, 'fontweight', 'bold');
     title('The "Best" Design Matrix', 'fontsize', ceil(18*1.10), 'fontweight', 'bold');
 
 end
-function design = makeX(params, order)
-if nargin==1, makeorder = 1; else makeorder = 0; end
+function design = makeX(params, order, verbose)
+if nargin < 3, verbose = 0; end
+if nargin < 2
+    makeorder = 1;
+elseif isempty(order)
+    makeorder = 1; 
+else
+    makeorder = 0;
+end
 
 %-----------------------------------------------------------------
 % Get a pseudoexponential distribution of ISIs 
@@ -362,7 +407,7 @@ if makeorder
         order = make_order(params.trialsPerCond, params.maxRep, params.counterBalanceInterval); 
     else
         order = [];
-        for i = 1:params.nconds, order = [order; repmat(i, params.trialsPerCond(i), 1)];end
+        for i = 1:params.nconds, order = [order; repmat(i, params.trialsPerCond(i), 1)]; end
         move_on = 0;
         while ~move_on
             tmp = order(randperm(params.ntrials)); 
@@ -1797,9 +1842,8 @@ function [day, time]        = get_timestamp(varargin)
 %       day: mmm_DD_YYYY
 %       time: HHMMSSPM
 % ===============================================%
-day = strtrim(datestr(now,'mmm_DD_YYYY'));
-time = strtrim(datestr(now,'HHMMSSPM'));
-
+day = strtrim(datestr(now,'YYYY_mmmDD'));
+time = strtrim(datestr(now,'HHMMPM'));
 end
 function out                = scalemat(in)
 % SCALEMAT Columnwise rescaling to min 0 and max 1
