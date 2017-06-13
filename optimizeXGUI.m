@@ -60,6 +60,38 @@ try
 %     cbintervalstr = {'None', '1st/2nd Half (2)', 'Tertiles (3) [possibly slow]', 'Quartiles (4) [possibly very slow]'};
 %     cbintervalnum = [1 2 3 4];
 %    {'Interval Counterbalancing'; 'counterBalanceInterval'},     cbintervalstr, ...
+
+
+    distOpt = {
+    'Rayleigh'
+    'Beta'
+    'Binomial'
+    'Burr'
+    'Chisquare'
+    'Exponential'
+    'Extreme Value'
+    'F'
+    'Gamma'
+    'Generalized Extreme Value'
+    'Generalized Pareto'
+    'Geometric'
+    'Half Normal'
+    'Hypergeometric'
+    'Lognormal'
+    'Negative Binomial'
+    'Noncentral F'
+    'Noncentral t'
+    'Noncentral Chi-square'
+    'Normal'
+    'Poisson'
+    'Stable'
+    'T'
+    'Uniform'
+    'Discrete Uniform'
+    'Weibull'
+    };
+
+
     [params, button] = settingsdlg(...
         'title'                 ,       'OptimizeX Settings', ...
         'separator'                ,   'General Settings', ...
@@ -74,6 +106,7 @@ try
         {'Mean ISI';'meanISI'}          ,       3, ...
         {'Min ISI';'minISI'}            ,       2, ...
         {'Max ISI';'maxISI'}            ,       6, ...
+        {'ISI Distribution'; 'distISI'} ,   distOpt, ...    
         {'Time before first trial'; 'restBegin'}, 10, ...
         {'Time after last trial'; 'restEnd'}, 10, ...
         'separator'             ,       'Optimization Settings', ...
@@ -180,7 +213,7 @@ meanISI = params.meanISI;
 TReff = params.TReff;
 mu = TReff:TReff:meanISI; 
 jitSample = zeros(1000,length(mu)); 
-for s = 1:length(mu), jitSample(:,s) = random('Rayleigh', mu(s), 1000, 1); end
+for s = 1:length(mu), jitSample(:,s) = random(params.distISI, mu(s), 1000, 1); end
 jitSample(jitSample<minISI) = NaN; 
 jitSample(jitSample>maxISI) = NaN;
 jitdist = abs(meanISI - nanmean(jitSample));
