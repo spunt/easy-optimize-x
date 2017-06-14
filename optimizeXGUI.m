@@ -54,7 +54,7 @@ function params = getParams
 % =========================================================================
 % Request Major Settings from User
 % =========================================================================
-try 
+try
 %     cbintervalstr = {'None', '1st/2nd Half (2)', 'Tertiles (3)', 'Quartiles (4)', 'Quintiles (5)' , 'Sextile (6)', 'Septile (7)', 'Octile (8)', 'Decile (10)', 'Hexadecile (16)'};
 %     cbintervalnum = [1 2 3 4 5 6 7 8 10 16];
 %     cbintervalstr = {'None', '1st/2nd Half (2)', 'Tertiles (3) [possibly slow]', 'Quartiles (4) [possibly very slow]'};
@@ -63,34 +63,10 @@ try
 
 
     distOpt = {
-    'Rayleigh'
-    'Beta'
-    'Binomial'
-    'Burr'
-    'Chisquare'
-    'Exponential'
-    'Extreme Value'
-    'F'
-    'Gamma'
-    'Generalized Extreme Value'
-    'Generalized Pareto'
-    'Geometric'
-    'Half Normal'
-    'Hypergeometric'
-    'Lognormal'
-    'Negative Binomial'
-    'Noncentral F'
-    'Noncentral t'
-    'Noncentral Chi-square'
-    'Normal'
-    'Poisson'
-    'Stable'
-    'T'
-    'Uniform'
-    'Discrete Uniform'
-    'Weibull'
-    };
-
+        'Rayleigh'
+        'Chisquare'
+        'Exponential'
+        };
 
     [params, button] = settingsdlg(...
         'title'                 ,       'OptimizeX Settings', ...
@@ -106,7 +82,7 @@ try
         {'Mean ISI';'meanISI'}          ,       3, ...
         {'Min ISI';'minISI'}            ,       2, ...
         {'Max ISI';'maxISI'}            ,       6, ...
-        {'ISI Distribution'; 'distISI'} ,   distOpt, ...    
+        {'ISI Distribution'; 'distISI'} ,   distOpt, ...
         {'Time before first trial'; 'restBegin'}, 10, ...
         {'Time after last trial'; 'restEnd'}, 10, ...
         'separator'             ,       'Optimization Settings', ...
@@ -116,19 +92,19 @@ try
         {'Max Time to Run (minutes)';'maxtime'}            ,       .5);
 catch err
     error_handler(err);
-end   
+end
 if strcmpi(button, 'cancel') || isempty(button), return; end % canceled
 % params.counterBalanceInterval   = cbintervalnum(strcmpi(cbintervalstr, params.counterBalanceInterval));
 params.trialsPerCond            = str2num(params.trialsPerCond);
-params.counterBalanceInterval   = 0; 
-if length(params.trialsPerCond)==1, params.trialsPerCond = repmat(params.trialsPerCond, 1, params.nconds); 
+params.counterBalanceInterval   = 0;
+if length(params.trialsPerCond)==1, params.trialsPerCond = repmat(params.trialsPerCond, 1, params.nconds);
 elseif length(params.trialsPerCond)~=params.nconds
-    msg = sprintf('The number of entries in "N Trials Per Condition" does not match the number of conditions'); 
+    msg = sprintf('The number of entries in "N Trials Per Condition" does not match the number of conditions');
     headsup(msg, 'Invalid Input', 1);
     optimizeXGUI
 end
 if params.minISI > params.meanISI | params.maxISI < params.meanISI
-    msg = sprintf('The ISI values you''ve specified look odd: Min ISI cannot be greater than the Mean ISI, and the Max ISI cannot be less than the Mean ISI'); 
+    msg = sprintf('The ISI values you''ve specified look odd: Min ISI cannot be greater than the Mean ISI, and the Max ISI cannot be less than the Mean ISI');
     headsup(msg, 'Invalid Input', 1);
     optimizeXGUI
 end
@@ -143,25 +119,25 @@ if strcmpi(button, 'cancel') || isempty(button), return; end
 vec = repmat('0 ', 1, params.nconds);
 all = [];
 for c = 1:condata.ncontrast
-    tmp = [{{sprintf('Vector for Contrast %d', c); sprintf('con%d', c)}}, 
-        {vec}, 
-        {{sprintf('Weight for Contrast %d', c); sprintf('con%dw', c)}}, 
+    tmp = [{{sprintf('Vector for Contrast %d', c); sprintf('con%d', c)}},
+        {vec},
+        {{sprintf('Weight for Contrast %d', c); sprintf('con%dw', c)}},
         {1}];
     all = [all; tmp];
 end
 [data2, button] = settingsdlg(...
     'title', 'Contrast Specification', ...
-    all{:}); 
+    all{:});
 if strcmpi(button, 'cancel') || isempty(button), return; end
-con = struct2cell(data2); 
+con = struct2cell(data2);
 params.L = [];
 convec = con(1:2:end);
 conweight = con(2:2:end);
-params.L = []; 
+params.L = [];
 params.conWeights = [];
 for c = 1:length(conweight)
-    params.L = [params.L; str2num(convec{c})]; 
-    params.conWeights(c) = conweight{c}; 
+    params.L = [params.L; str2num(convec{c})];
+    params.conWeights(c) = conweight{c};
 end
 
 % =========================================================================
@@ -190,18 +166,18 @@ tic; % start the timer
 order = [];
 for i = 1:params.nconds, order = [order; repmat(i, params.trialsPerCond(i), 1)]; end
 move_on = 0;
-maxtesttime = 5; 
+maxtesttime = 5;
 while ~move_on
-    tmp = order(randperm(params.ntrials)); 
-    nchunk = getchunks(tmp); 
+    tmp = order(randperm(params.ntrials));
+    nchunk = getchunks(tmp);
     if ~any(nchunk>params.maxRep)
-        move_on = 1; 
+        move_on = 1;
     elseif toc>=maxtesttime
         fprintf('FAIL\n\n');
-        error('Current parameters prevent efficient creation of valid trial orders. Try increasing Maximum Block Size parameter.'); 
+        error('Current parameters prevent efficient creation of valid trial orders. Try increasing Maximum Block Size parameter.');
     end
 end
-order = tmp; 
+order = tmp;
 % if toc>=maxtime*60, break, end
 fprintf('SUCCESS\n');
 
@@ -211,32 +187,44 @@ minISI = params.minISI;
 maxISI = params.maxISI;
 meanISI = params.meanISI;
 TReff = params.TReff;
-mu = TReff:TReff:meanISI; 
-jitSample = zeros(1000,length(mu)); 
-for s = 1:length(mu), jitSample(:,s) = random(params.distISI, mu(s), 1000, 1); end
-jitSample(jitSample<minISI) = NaN; 
+mu = TReff:TReff:meanISI;
+jitSample = zeros(1000,length(mu));
+% try
+%     for s = 1:length(mu), jitSample(:,s) = random(params.distISI, mu(s), 1000, 1); end
+% catch
+switch lower(params.distISI)
+    % Thanks to Jeremy Purcell for this fix for older versions of MATLAB
+    case 'rayleigh'
+        for s = 1:length(mu), jitSample(:,s) = raylrnd(mu(s), 1000, 1);  end
+    case 'chisquare'
+        for s = 1:length(mu), jitSample(:,s) = chi2rnd(mu(s), 1000, 1);  end
+    case 'exponential'
+        for s = 1:length(mu), jitSample(:,s) = exprnd(mu(s), 1000, 1);  end
+end
+% end
+jitSample(jitSample<minISI) = NaN;
 jitSample(jitSample>maxISI) = NaN;
 jitdist = abs(meanISI - nanmean(jitSample));
 minIDX = find(jitdist==min(jitdist));
 params.jitSample = jitSample(:,minIDX(1));
-params.jitSample(isnan(params.jitSample)) = []; 
+params.jitSample(isnan(params.jitSample)) = [];
 fprintf('SUCCESS\n');
 end
 function optimizeX(params)
 
-    keep = params.keep; 
+    keep = params.keep;
     L = params.L;
-    conWeights = params.conWeights; 
+    conWeights = params.conWeights;
     gensize = params.gensize;
     gensize = gensize - mod(gensize,2); % ensures gensize is divisible by 2
     ngen = params.ngen;
-    maxtime = params.maxtime; 
-    nalpha = max([params.keep ceil(gensize*.01)]); 
+    maxtime = params.maxtime;
+    nalpha = max([params.keep ceil(gensize*.01)]);
     halfgen = gensize/2;
     L(:,end+1) = 0;
     L = L';
     ncontrasts = size(L,2);
-    ngenbin = 10; 
+    ngenbin = 10;
 
     %% Check Settings %%
     if size(L,1)~=params.nconds+1, error('# of columns in contrast matrix ''L'' does not equal # of conditions defined in params'); end
@@ -244,12 +232,12 @@ function optimizeX(params)
 
     %% Begin Optimization %%
     [d, t] = get_timestamp;
-    fprintf('\nDesign Optimization Started %s on %s', t, d); 
+    fprintf('\nDesign Optimization Started %s on %s', t, d);
     fprintf('\n\n\tDESIGN PARAMETERS\n');
     disp(params)
 
     %% Start the Progress Monitor %%
-    progstr = sprintf('Generation %%0%dd/%d', length(num2str(ngen)), ngen); 
+    progstr = sprintf('Generation %%0%dd/%d', length(num2str(ngen)), ngen);
     tic; % start the timer
     h = waitbar(1/ngen,sprintf(progstr, 1),'Name','optimizeXGUI Progress', ...
         'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
@@ -261,7 +249,7 @@ function optimizeX(params)
     order = cell(gensize,1);
     jitter = cell(gensize,1);
     genbins = floor(gensize/ngenbin:gensize/ngenbin:gensize);
-    
+
     for i = 1:gensize
 
         d = makeX(params);
@@ -283,7 +271,7 @@ function optimizeX(params)
     for g = 2:ngen
 
         fprintf(sprintf(['\n' progstr ' '], g))
-        waitbar(g/ngen, h, sprintf(progstr, g)); 
+        waitbar(g/ngen, h, sprintf(progstr, g));
 
         %% Check for Cancel button press
         if getappdata(h,'canceling'), delete(h); break; end
@@ -305,7 +293,7 @@ function optimizeX(params)
             %% Combine Orders %%
             conidx = randperm(params.nconds);
             orderidx = randperm(length(fit.order));
-            fixcon = conidx(1); 
+            fixcon = conidx(1);
             varcon = conidx(2:end);
             calpha = fit.order{orderidx(1)};
             mate = fit.order{orderidx(2)};
@@ -364,7 +352,7 @@ function optimizeX(params)
 
     end
     delete(h);
-    
+
     %% Save Best Designs %%
     [d, t] = get_timestamp;
     outdir = sprintf('best_designs_%s_%s', d, t); mkdir(outdir);
@@ -380,23 +368,23 @@ function optimizeX(params)
         fname = [outdir filesep 'design' num2str(i) '.txt'];
         dlmwrite(fname, design{i}.combined, 'delimiter', '\t')
         fname2 = [outdir filesep 'design' num2str(i) '.csv'];
-        cc = [{'Trial' 'Condition' 'Onset' 'Duration' 'ISI'}; num2cell(design{i}.combined)]; 
-        writedesign(cc, fname2); 
+        cc = [{'Trial' 'Condition' 'Onset' 'Duration' 'ISI'}; num2cell(design{i}.combined)];
+        writedesign(cc, fname2);
     end
     save([outdir filesep 'designinfo.mat'], 'design', 'params');
     fprintf('Finished in %2.2f minutes at %s on %s\n\n', toc/60, t, d);
 
     %% Visualize the Best Design
-    
+
     hfig = figure('color', 'white', 'units', 'norm', 'pos', [.3 .3 .3 .4]);
     hax = axes(hfig);
     winner = scalemat(design{1}.X);
     winner = [winner ones(size(winner,1), 1)];
     h = imagesc(winner, 'parent', hax); colormap('gray');
     set(hax, 'FontName', 'Arial', 'FontSize', 18, 'XTick', 1:size(winner,2));
-    xticklabel = strcat({'cond'}, get(hax, 'XTickLabel')); 
+    xticklabel = strcat({'cond'}, get(hax, 'XTickLabel'));
     xticklabel{end} = 'constant';
-    set(hax, 'xticklabel', xticklabel); 
+    set(hax, 'xticklabel', xticklabel);
     ylabel('TR', 'fontsize', 18, 'fontweight', 'bold');
     title('The "Best" Design Matrix', 'fontsize', ceil(18*1.10), 'fontweight', 'bold');
 
@@ -406,13 +394,13 @@ if nargin < 3, verbose = 0; end
 if nargin < 2
     makeorder = 1;
 elseif isempty(order)
-    makeorder = 1; 
+    makeorder = 1;
 else
     makeorder = 0;
 end
 
 %-----------------------------------------------------------------
-% Get a pseudoexponential distribution of ISIs 
+% Get a pseudoexponential distribution of ISIs
 %-----------------------------------------------------------------
 goodJit=0;
 while goodJit==0
@@ -437,17 +425,17 @@ jitters(end+1)=params.restEnd;
 %-----------------------------------------------------------------
 if makeorder
     if params.counterBalanceInterval
-        order = make_order(params.trialsPerCond, params.maxRep, params.counterBalanceInterval); 
+        order = make_order(params.trialsPerCond, params.maxRep, params.counterBalanceInterval);
     else
         order = [];
         for i = 1:params.nconds, order = [order; repmat(i, params.trialsPerCond(i), 1)]; end
         move_on = 0;
         while ~move_on
-            tmp = order(randperm(params.ntrials)); 
-            nchunk = getchunks(tmp); 
+            tmp = order(randperm(params.ntrials));
+            nchunk = getchunks(tmp);
             if ~any(nchunk>params.maxRep), move_on = 1; end
         end
-        order = tmp; 
+        order = tmp;
     end
 end
 %------------------------------------------------------------------------
@@ -457,7 +445,7 @@ cond=order;
 oversamp_rate=params.TR/params.TReff;
 dmlength=params.scan_length*oversamp_rate;
 oversamp_onset=(onset/params.TR)*oversamp_rate;
-hrf=spm_hrf(params.TReff);  
+hrf=spm_hrf(params.TReff);
 desmtx=zeros(dmlength,params.nconds);
 for c=1:params.nconds
   r=zeros(1,dmlength);
@@ -514,7 +502,7 @@ cond=order;
 oversamp_rate=params.TR/params.TReff;
 dmlength=params.scan_length*oversamp_rate;
 oversamp_onset=(onset/params.TR)*oversamp_rate;
-hrf=spm_hrf(params.TReff);  
+hrf=spm_hrf(params.TReff);
 desmtx=zeros(dmlength,params.nconds);
 for c=1:params.nconds
   r=zeros(1,dmlength);
@@ -553,7 +541,7 @@ design.duration=(params.scan_length*params.TR)/60;
 end
 % =========================================================================
 % *
-% * SUBFUNCTIONS (ORDERING) 
+% * SUBFUNCTIONS (ORDERING)
 % *
 % =========================================================================
 function ordervec   = make_order(condtrials, maxrep, cbinterval, cborder)
@@ -574,8 +562,8 @@ function ordervec   = make_order(condtrials, maxrep, cbinterval, cborder)
 %       0 or 1 (default) = none
 %       > 1 = will divide into equal intervals of the specified size, e.g.,
 %       2 will counterbalance across first and second half
-%       4 will counterbalance across quartiles       
-%    cborder = order of m-seq counterbalancing (0 for none)       
+%       4 will counterbalance across quartiles
+%    cborder = order of m-seq counterbalancing (0 for none)
 %
 
 % --------------------------------------- Copyright (C) 2014 ---------------------------------------
@@ -589,24 +577,24 @@ if nargin < 3, cbinterval = 0; end
 if nargin < 4, cborder = 0; end
 if maxrep==1, error('maxrep must be greater than 1'); end
 ncond = length(condtrials);
-ntrials = sum(condtrials); 
+ntrials = sum(condtrials);
 ntrialsmax = ncond*max(condtrials);
 if cbinterval > 1
     qt      = 0:(1/cbinterval):1;
-    goodn   = [floor(condtrials/cbinterval); ceil(condtrials/cbinterval)]; 
-    qidx1   = ceil(quantile(1:ntrials, qt(1:end-1))); 
+    goodn   = [floor(condtrials/cbinterval); ceil(condtrials/cbinterval)];
+    qidx1   = ceil(quantile(1:ntrials, qt(1:end-1)));
     qidx2   = [qidx1(2:end)-1 ntrials];
 end
 if cborder
     seqrep = 0;
-    tmp = 0; 
+    tmp = 0;
     while length(tmp) < ntrialsmax
-        seqrep = seqrep + 1; 
+        seqrep = seqrep + 1;
         tmp = carryoverCounterbalance(ncond, cborder, seqrep);
-    end  
-    move_on = 0; 
+    end
+    move_on = 0;
     while ~move_on
-        move_on = 1; 
+        move_on = 1;
         seq = carryoverCounterbalance(ncond, cborder, seqrep)';
         for i = 1:ncond
             condseq = find(seq==i);
@@ -628,8 +616,8 @@ else
     for i = 1:ncond, ordervec = [ordervec; repmat(i, condtrials(i), 1)]; end
     move_on = 0;
     while ~move_on
-        move_on = 1; 
-        tmp = ordervec(randperm(ntrials)); 
+        move_on = 1;
+        tmp = ordervec(randperm(ntrials));
         if any(getchunks(tmp) > maxrep), move_on = 0; continue; end
         if cbinterval > 1
             orderbinmat = repmat(tmp, 1, ncond)==repmat(1:ncond, ntrials, 1);
@@ -639,16 +627,16 @@ else
             end
         end
     end
-    ordervec = tmp; 
+    ordervec = tmp;
 end
 end
 function order      = make_order_old(condtrials, maxrep, cborder)
 if nargin < 3, error('USAGE: order = make_order(condtrials, maxrep, cborder)'); end
 if maxrep==1, error('maxrep must be greater than 1'); end
 ncond = length(condtrials);
-ntrials = sum(condtrials); 
+ntrials = sum(condtrials);
 seqrep = ceil(ntrials/length(carryoverCounterbalance(ncond, cborder, 1)));
-move_on = 0; 
+move_on = 0;
 while ~move_on
     seq = carryoverCounterbalance(ncond, cborder, seqrep);
     for i = 1:ncond
@@ -662,9 +650,9 @@ order = tmp;
 end
 function condSequence = carryoverCounterbalance(numConds,cbOrder,reps)
 % CARRYOVERCOUNTERBALANCE
-% 
+%
 %   USAGE: condSequence = carryoverCounterbalance(numConds,cbOrder,reps)
-% 
+%
 % This is a minimally modified version of software written by Joseph Brooks
 % and described in the following paper which should be cited if use
 % counterbalancing:
@@ -684,7 +672,7 @@ function condSequence = carryoverCounterbalance(numConds,cbOrder,reps)
 % OUTPUT: -condSequence: the counterbalanced sequence. Length will depend
 % on parameters. Output as an array of numbers
 %
-% INPUTS: 
+% INPUTS:
 %   -numConds: N unique conditions. Must be a positive integer
 %
 %   -cbOrder: depth/order of counterbalancing. Must be a positive integer.
@@ -703,17 +691,17 @@ function condSequence = carryoverCounterbalance(numConds,cbOrder,reps)
 %   -omitSelfAdjacencies: 0 = include condition self-adjacencies (e.g. 2 2
 %   1 2 1 1 2); 1 = exclude condition self-adjacencies (e.g. 1 2 1 2 1 2)
 %
-% VERSION: 1.0.01.03.2012 
+% VERSION: 1.0.01.03.2012
 % Joseph Brooks, UCL Institute of Cognitive Neuroscience brooks.jl@gmail.com
 %
-omitSelfAdjacencies = 0; 
+omitSelfAdjacencies = 0;
 if nargin<1, error('USAGE: condSequence = carryoverCounterbalance(numConds,cbOrder,rep)'); end
 if nargin<2, cbOrder = 1; end
 if nargin<3, reps = 2; end
 if reps < 1, error('ERROR: reps parameter must be > 0'); end
 if cbOrder < 1, error('ERROR: cbOrder parameter must be > 0'); end
 if numConds < 1, error('ERROR: numConds parameter must be > 0'); end
-if omitSelfAdjacencies < 0 || omitSelfAdjacencies > 1, 
+if omitSelfAdjacencies < 0 || omitSelfAdjacencies > 1,
     error('ERROR: omitSelfAdjacencies parameter must be 0 or 1');
 end;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -731,13 +719,13 @@ if cbOrder == 1
 else
  %%%CONSTRUCT N-TUPLE CORRESPONDING TO EACH NODE WHEN cbOrder > 1
  nTuples = nTuples_brooks(numConds,cbOrder);
- 
+
  %If indicated in input parameters, remove nodes with self-adjacencies by putting zeros in
  %corresponding columns and rows of adjacency matrix
  if omitSelfAdjacencies
  nTuples = nTuples_removeSelfAdjacencies_brooks(nTuples);
  end
- 
+
  %%%Construct adjacency matrix by connecting only those nTuples
  %%%which share the (n-1)-length-beginning/(n-1)-length-end of their sequences
  adjacencyMatrix = zeros(size(nTuples,1),size(nTuples,1));
@@ -748,7 +736,7 @@ else
  end
  end
  end
- 
+
  %%%Duplicate edges based on number of reps requested
  adjacencyMatrix = adjacencyMatrix*reps;
 end
@@ -757,7 +745,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 nodeSequence = eulerPathKandelMethod_carryoverCounterbalance(adjacencyMatrix);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%CONSTRUCT CONDITION SEQUENCE FROM NODE SEQUENCE. 
+%%%CONSTRUCT CONDITION SEQUENCE FROM NODE SEQUENCE.
 %%%-For first-order counterbalancing node sequence = cond sequence
 %%%-For higher-order counterbalancing, overlapping parts of sequence
 %%%must be considered and only one additional condition from the
@@ -788,7 +776,7 @@ function [seq]      = eulerPathKandelMethod_carryoverCounterbalance(adjacencyMat
 % fully-connected digraph with n nodes and 1 instance of the edge
 % between each node.
 % Option2: If entering a matrix then the matrix will be
-% treated as the adjacency matrix of the graph, G. Must be an nxn matrix for 
+% treated as the adjacency matrix of the graph, G. Must be an nxn matrix for
 % a graph with n nodes Dimension1 = represents the
 % node sending the directed edge, e.g. G(1,2) is an entry
 % representing a directed edge from node 1 to node 2.
@@ -859,12 +847,12 @@ outEdgesOrder = cell(size(adjacencyMatrix,1),1);for o = 1:size(adjacencyMatrix,1
  outEdgesOrder{o} = [outEdgesOrder{o} i];
  end
  end
- 
- %%%Randomly shuffle the out edges for this node 
+
+ %%%Randomly shuffle the out edges for this node
  outEdgesOrder{o} = outEdgesOrder{o}(randperm(length(outEdgesOrder{o})));
- 
+
  %%%Add arborescence edge to end of list if it exists
- if sum(arb(o,:)) > 0 
+ if sum(arb(o,:)) > 0
  outEdgesOrder{o} = [outEdgesOrder{o} find(arb(o,:) == 1)];
  end
 end
@@ -878,7 +866,7 @@ seq = find(sum(arb,2) == 0);
 %%% as the new source node until all edges have been traversed.
 while sum(cellfun('length',outEdgesOrder)) > 0
  seq = [seq outEdgesOrder{seq(end)}(1)];
- 
+
  if length(outEdgesOrder{seq(end-1)}) > 1
  outEdgesOrder{seq(end-1)} = outEdgesOrder{seq(end-1)}(2:end);
  else
@@ -896,7 +884,7 @@ function arb        = arborescenceKandel_carryoverCounterbalance(adjacencyMatrix
 %%% vertex j. The size of each dimension of the matrix is equal to the
 %%% number of vertices of the graph
 %%%
-%%% OUTPUT: Adjacency Matrix of the arborescence. 
+%%% OUTPUT: Adjacency Matrix of the arborescence.
 %%%
 %%% KANDEL ALGORITHM
 %%% (1) start at random node
@@ -950,15 +938,15 @@ while length(unique(nodesVisited)) < size(adjacencyMatrix,1)
  %%%Randomly choose one of the edges into of the node and designate as
  %%%source
  selectedSource = availableSourceNodes(randi(length(availableSourceNodes)));
- 
+
  %%%If this is the first visit to the source node, then mark the edge as
  %%%part of the arborescence
  if sum([nodesVisited == selectedSource]) == 0
  arb(selectedSource,currentNode) = 1; end
- 
+
  %%%Add target node to list of visited nodes
  nodesVisited = [nodesVisited,selectedSource];
- 
+
  currentNode = selectedSource;
 end
 end
@@ -977,7 +965,7 @@ function result     = nTuples_brooks(numItems,n)
 % -n: this is the length of each nTuple.
 %
 % EXAMPLE: For all of the nTuples of length 2 of 3 items, use nTuples(3,2).
-% The result of this computation is: 
+% The result of this computation is:
 % 1 1
 % 1 2
 % 1 3
@@ -1006,12 +994,12 @@ function result     = nTuples_removeSelfAdjacencies_brooks(nTuplesList)
 result = [];
 for i = 1:size(nTuplesList,1)
  containsAdjacency = false;
- 
+
  for n = 1:size(nTuplesList,2)-1
  if nTuplesList(i,n) == nTuplesList(i,n+1) containsAdjacency = true;
  end;
  end;
- 
+
  if ~containsAdjacency
  result(end+1,:) = nTuplesList(i,:);
  end
@@ -1100,72 +1088,72 @@ function varargout  = spm_filter(K,Y)
 %-Configure filter
 %==========================================================================
 if nargin == 1 && isstruct(K)
-    
+
     % set K.X0
     %----------------------------------------------------------------------
     for s = 1:length(K)
-        
+
         % make high pass filter
         %------------------------------------------------------------------
         k       = length(K(s).row);
         n       = fix(2*(k*K(s).RT)/K(s).HParam + 1);
         X0      = spm_dctmtx(k,n);
         K(s).X0 = X0(:,2:end);
-        
+
     end
-    
+
     % return filter structure
     %----------------------------------------------------------------------
     varargout = { K };
-    
+
 %-Apply filter
 %==========================================================================
 else
-    
+
     % K is a filter structure
     %----------------------------------------------------------------------
     if isstruct(K)
-        
+
         % ensure requisite fields are present
         %------------------------------------------------------------------
         if ~isfield(K(1),'X0')
             K = spm_filter(K);
         end
-        
+
         if numel(K) == 1 && length(K.row) == size(Y,1)
-            
+
             % apply high pass filter
             %--------------------------------------------------------------
             Y = Y - K.X0*(K.X0'*Y);
-            
+
         else
-            
+
             for s = 1:length(K)
-                
+
                 % select data
                 %----------------------------------------------------------
                 y = Y(K(s).row,:);
-                
+
                 % apply high pass filter
                 %----------------------------------------------------------
                 y = y - K(s).X0*(K(s).X0'*y);
-                
+
                 % reset filtered data in Y
                 %----------------------------------------------------------
                 Y(K(s).row,:) = y;
-                
+
             end
-            
+
         end
-        
+
     % K is simply a filter matrix
     %----------------------------------------------------------------------
     else
-        
+
         Y = K * Y;
-        
+
     end
-    
+
     % return filtered data
     %----------------------------------------------------------------------
     varargout = { Y };
@@ -1357,7 +1345,7 @@ function [settings, button] = settingsdlg(varargin)
 % dialog box that returns a structure formed according to user input. The
 % input should be given in the form of 'fieldname', default_value - pairs,
 % where 'fieldname' is the fieldname in the structure [settings], and
-% default_value the initial value displayed in the dialog box. 
+% default_value the initial value displayed in the dialog box.
 %
 % SETTINGSDLG uses UIWAIT to suspend execution until the user responds.
 %
@@ -1368,24 +1356,24 @@ function [settings, button] = settingsdlg(varargin)
 % [settings, button] = SETTINGSDLG(settings) returns which button was
 % pressed, in addition to the (modified) structure [settings]. Either 'ok',
 % 'cancel' or [] are possible values. The empty output means that the
-% dialog was closed before either Cancel or OK were pressed. 
+% dialog was closed before either Cancel or OK were pressed.
 %
 % SETTINGSDLG('title', 'window_title') uses 'window_title' as the dialog's
-% title. The default is 'Adjust settings'. 
+% title. The default is 'Adjust settings'.
 %
 % SETTINGSDLG('description', 'brief_description',...) starts the dialog box
-% with 'brief_description', followed by the input fields.   
+% with 'brief_description', followed by the input fields.
 %
 % SETTINGSDLG('windowposition', P, ...) positions the dialog box according to
-% the string or vector [P]; see movegui() for valid values.  
+% the string or vector [P]; see movegui() for valid values.
 %
 % SETTINGSDLG( {'display_string', 'fieldname'}, default_value,...) uses the
 % 'display_string' in the dialog box, while assigning the corresponding
-% user-input to fieldname 'fieldname'. 
+% user-input to fieldname 'fieldname'.
 %
 % SETTINGSDLG(..., 'checkbox_string', true, ...) displays a checkbox in
-% stead of the default edit box, and SETTINGSDLG('fieldname', {'string1', 
-% 'string2'},... ) displays a popup box with the strings given in 
+% stead of the default edit box, and SETTINGSDLG('fieldname', {'string1',
+% 'string2'},... ) displays a popup box with the strings given in
 % the second cell-array.
 %
 % Additionally, you can put [..., 'separator', 'seperator_string',...]
@@ -1395,26 +1383,26 @@ function [settings, button] = settingsdlg(varargin)
 % You can also modify the display behavior in the case of checkboxes. When
 % defining checkboxes with a 2-element logical array, the second boolean
 % determines whether all fields below that checkbox are initially disabled
-% (true) or not (false). 
+% (true) or not (false).
 %
 % Example:
-% 
+%
 % [settings, button] = settingsdlg(...
-%     'Description', 'This dialog will set the parameters used by FMINCON()',... 
+%     'Description', 'This dialog will set the parameters used by FMINCON()',...
 %     'title'      , 'FMINCON() options',...
 %     'separator'  , 'Unconstrained/General',...
 %     {'This is a checkbox'; 'Check'}, [true true],...
 %     {'Tolerance X';'TolX'}, 1e-6,...
 %     {'Tolerance on Function';'TolFun'}, 1e-6,...
 %     'Algorithm'  , {'active-set','interior-point'},...
-%     'separator'  , 'Constrained',...    
+%     'separator'  , 'Constrained',...
 %     {'Tolerance on Constraints';'TolCon'}, 1e-6)
-% 
-% See also inputdlg, dialog, errordlg, helpdlg, listdlg, msgbox, questdlg, textwrap, 
+%
+% See also inputdlg, dialog, errordlg, helpdlg, listdlg, msgbox, questdlg, textwrap,
 % uiwait, warndlg.
-    
 
-% Please report bugs and inquiries to: 
+
+% Please report bugs and inquiries to:
 %
 % Name       : Rody P.S. Oldenhuis
 % E-mail     : oldenhuis@gmail.com    (personal)
@@ -1426,7 +1414,7 @@ function [settings, button] = settingsdlg(varargin)
 % Changelog
 %{
 2014/July/07 (Rody Oldenhuis)
-- FIXED: The example in the help section didn't work correctly 
+- FIXED: The example in the help section didn't work correctly
   (thanks Elco Bakker)
 
 2014/February/14 (Rody Oldenhuis)
@@ -1441,16 +1429,16 @@ function [settings, button] = settingsdlg(varargin)
 
 % If you find this work useful, please consider a donation:
 % https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=6G3S5UYM7HJ3N
-    
+
     %% Initialize
-        
+
     % errortraps
     narg = nargin;
     if narg < 1, error('FEED ME MORE INPUTS, SEYMOUR!'); end
-% 
+%
 %     error(narginchk(1, inf, narg, 'struct'));
-        
-    % parse input (+errortrap) 
+
+    % parse input (+errortrap)
     have_settings = 0;
     if isstruct(varargin{1})
         settings = varargin{1}; have_settings = 1; end
@@ -1466,29 +1454,29 @@ function [settings, button] = settingsdlg(varargin)
         parameters = varargin(1+have_settings : 2 : end);
         values     = varargin(2+have_settings : 2 : end);
     end
-    
-    % Initialize data    
+
+    % Initialize data
     button = [];
     fields = cell(numel(parameters),1);
     tags   = fields;
-    
+
     % Fill [settings] with default values & collect data
     for ii = 1:numel(parameters)
-        
+
         % Extract fields & tags
         if iscell(parameters{ii})
             tags{ii}   = parameters{ii}{1};
-            fields{ii} = parameters{ii}{2};            
-        else 
+            fields{ii} = parameters{ii}{2};
+        else
             % More errortraps
             if ~ischar(parameters{ii})
                 error('settingsdlg:nonstring_parameter',...
                 'Arguments should be given as [''parameter'', value,...] pairs.')
             end
             tags{ii}   = parameters{ii};
-            fields{ii} = parameters{ii};            
+            fields{ii} = parameters{ii};
         end
-        
+
         % More errortraps
         if ~ischar(fields{ii})
             error('settingsdlg:fieldname_not_char',...
@@ -1498,10 +1486,10 @@ function [settings, button] = settingsdlg(varargin)
             error('settingsdlg:tag_not_char',...
                 'Display name should be a string.')
         end
-        
-        % NOTE: 'Separator' is now in 'fields' even though 
+
+        % NOTE: 'Separator' is now in 'fields' even though
         % it will not be used as a fieldname
-        
+
         % Make sure all fieldnames are properly formatted
         % (alternating capitals, no whitespace)
         if ~strcmpi(fields{ii}, {'Separator';'Title';'Description'})
@@ -1517,65 +1505,65 @@ function [settings, button] = settingsdlg(varargin)
             else
                 settings.(fields{ii}) = values{ii};
             end
-        end        
+        end
     end
-    
+
     % Avoid (some) confusion
     clear parameters
-    
+
     % Use default colorscheme from the OS
     bgcolor = get(0, 'defaultUicontrolBackgroundColor');
     bgcolor = [234 234 230]/255;
     fgcolor = [0 0 0];
     % Default fontsize
-    fontsize = get(0, 'defaultuicontrolfontsize'); 
-    fontsize = fontsize*1.33; 
-    % Edit-bgcolor is platform-dependent. 
-    % MS/Windows: white. 
+    fontsize = get(0, 'defaultuicontrolfontsize');
+    fontsize = fontsize*1.33;
+    % Edit-bgcolor is platform-dependent.
+    % MS/Windows: white.
     % UNIX: same as figure bgcolor
 %     if ispc, edit_bgcolor = 'White';
 %     else     edit_bgcolor = bgcolor;
 %     end
 
-% TODO: not really applicable since defaultUicontrolBackgroundColor 
+% TODO: not really applicable since defaultUicontrolBackgroundColor
 % doesn't really seem to work on Unix...
 edit_bgcolor = 'White';
-    
+
     % Get basic window properties
     title         = getValue('Adjust settings', 'Title');
     description   = getValue( [], 'Description');
-    total_width   = getValue(325, 'WindowWidth');     
-    control_width = getValue(100, 'ControlWidth');       
-    
-    % Window positioning:     
+    total_width   = getValue(325, 'WindowWidth');
+    control_width = getValue(100, 'ControlWidth');
+
+    % Window positioning:
     % Put the window in the center of the screen by default.
-    % This will usually work fine, except on some  multi-monitor setups.     
-    scz  = get(0, 'ScreenSize'); 
-    scxy = round(scz(3:4)/2-control_width/2);    
+    % This will usually work fine, except on some  multi-monitor setups.
+    scz  = get(0, 'ScreenSize');
+    scxy = round(scz(3:4)/2-control_width/2);
     scx  = min(scz(3),max(1,scxy(1)));
     scy  = min(scz(4),max(1,scxy(2)));
-    
+
     % String to pass on to movegui
-    window_position = getValue('center', 'WindowPosition');   
-    
-        
+    window_position = getValue('center', 'WindowPosition');
+
+
     % Calculate best height for all uicontrol()
     control_height = max(18, (fontsize+6));
-    
+
     % Calculate figure height (will be adjusted later according to description)
     total_height = numel(fields)*1.25*control_height + ... % to fit all controls
                      1.5*control_height + 20; % to fit "OK" and "Cancel" buttons
-                 
+
     % Total number of separators
     num_separators = nnz(strcmpi(fields,'Separator'));
-        
+
     % Draw figure in background
     fighandle = figure(...
          'integerhandle'   , 'off',...         % use non-integers for the handle (prevents accidental plots from going to the dialog)
          'Handlevisibility', 'off',...         % only visible from within this function
          'position'        , [scx, scy, total_width, total_height],...% figure position
          'visible'         , 'off',...         % hide the dialog while it is being constructed
-         'backingstore'    , 'off',...         % DON'T save a copy in the background         
+         'backingstore'    , 'off',...         % DON'T save a copy in the background
          'resize'          , 'off', ...        % but just keep it resizable
          'renderer'        , 'zbuffer', ...    % best choice for speed vs. compatibility
          'WindowStyle'     ,'modal',...        % window is modal
@@ -1587,23 +1575,23 @@ edit_bgcolor = 'White';
          'NumberTitle'     , 'off',...         % "Figure 1.4728...:" just looks corny
          'Defaultuicontrolfontsize', fontsize, ...
          'color'           , bgcolor);         % use default colorscheme
-          
-    %% Draw all required uicontrols(), and unhide window 
-    
+
+    %% Draw all required uicontrols(), and unhide window
+
     % Define X-offsets (different when separators are used)
     separator_offset_X = 2;
     if num_separators > 0
         text_offset_X = 20;
-        text_width = (total_width-control_width-text_offset_X);        
+        text_width = (total_width-control_width-text_offset_X);
     else
         text_offset_X = separator_offset_X;
         text_width = (total_width-control_width);
     end
-    
+
     % Handle description
     description_offset = 0;
     if ~isempty(description)
-        
+
         % create textfield (negligible height initially)
         description_panel = uicontrol(...
             'parent'  , fighandle,...
@@ -1613,39 +1601,39 @@ edit_bgcolor = 'White';
             'Horizontalalignment', 'left',...
             'position', [separator_offset_X,...
                          total_height,total_width,1]);
-                     
+
         % wrap the description
-        description = textwrap(description_panel, {description});        
-        
-        % adjust the height of the figure        
+        description = textwrap(description_panel, {description});
+
+        % adjust the height of the figure
         textheight = size(description,1)*(fontsize+6);
-        description_offset = textheight + 20;        
+        description_offset = textheight + 20;
         total_height = total_height + description_offset;
         set(fighandle,...
-            'position', [scx, scy, total_width, total_height])        
-        
-        % adjust the position of the textfield and insert the description        
+            'position', [scx, scy, total_width, total_height])
+
+        % adjust the position of the textfield and insert the description
         set(description_panel, ...
             'string'  , description,...
             'position', [separator_offset_X, total_height-textheight, ...
                          total_width, textheight]);
     end
-    
+
     % Define Y-offsets (different when descriptions are used)
     control_offset_Y = total_height-control_height-description_offset;
-    
+
     % initialize loop
-    controls = zeros(numel(tags)-num_separators,1);    
+    controls = zeros(numel(tags)-num_separators,1);
     ii = 1;             sep_ind = 1;
     enable = 'on';      separators = zeros(num_separators,1);
-    
+
     % loop through the controls
     if numel(tags) > 0
         while true
-            
+
             % Should we draw a separator?
             if strcmpi(tags{ii}, 'Separator')
-                
+
                 % Print separator
                 uicontrol(...
                     'style'   , 'text',...
@@ -1658,24 +1646,24 @@ edit_bgcolor = 'White';
                     'fontsize', fontsize, ...
                     'position', [separator_offset_X,control_offset_Y-4, ...
                     total_width, control_height]);
-                
+
                 % remove separator, but save its position
                 fields(ii) = [];
                 tags(ii)   = [];  separators(sep_ind) = ii;
                 values(ii) = [];  sep_ind = sep_ind + 1;
-                
+
                 % reset enable (when neccessary)
                 if strcmpi(enable, 'off')
                     enable = 'on'; end
-                
+
                 % NOTE: DON'T increase loop index
-                
+
             % ... or a setting?
             else
-                
+
                 % logicals: use checkbox
                 if islogical(values{ii})
-                    
+
                     % First draw control
                     controls(ii) = uicontrol(...
                         'style'   , 'checkbox',...
@@ -1687,7 +1675,7 @@ edit_bgcolor = 'White';
                         'value'   , values{ii}(1),...
                         'position', [text_offset_X,control_offset_Y-4, ...
                         total_width, control_height]);
-                    
+
                     % Should everything below here be OFF?
                     if (length(values{ii})>1)
                         % turn next controls off when asked for
@@ -1697,7 +1685,7 @@ edit_bgcolor = 'White';
                         set(controls(ii),...
                             'Callback', @(varargin) EnableDisable(ii,varargin{:}));
                     end
-                    
+
                 % doubles      : use edit box
                 % cells        : use popup
                 % cell-of-cells: use table
@@ -1712,7 +1700,7 @@ edit_bgcolor = 'White';
                     'foreg', fgcolor, ...
                         'position', [text_offset_X,control_offset_Y-4, ...
                         text_width, control_height]);
-                    
+
                     % Popup, edit box or table?
                     style = 'edit';
                     draw_table = false;
@@ -1721,7 +1709,7 @@ edit_bgcolor = 'White';
                         if all(cellfun('isclass', values{ii}, 'cell'))
                             draw_table = true; end
                     end
-                    
+
                     % Draw appropriate control
                     if ~draw_table
                         controls(ii) = uicontrol(...
@@ -1738,23 +1726,23 @@ edit_bgcolor = 'White';
                         warning(...
                             'settingsdlg:not_yet_implemented',...
                             'Treatment of cells is not yet implemented.');
-                        
+
                     end
                 end
-                
+
                 % increase loop index
                 ii = ii + 1;
             end
-            
+
             % end loop?
             if ii > numel(tags)
                 break, end
-            
+
             % Decrease offset
             control_offset_Y = control_offset_Y - 1.25*control_height;
         end
     end
-    
+
     % Draw cancel button
     uicontrol(...
         'style'   , 'pushbutton',...
@@ -1762,7 +1750,7 @@ edit_bgcolor = 'White';
         'string'  , 'Cancel',...
         'position', [separator_offset_X,2, total_width/2.5,control_height*1.5],...
         'Callback', @Cancel)
-    
+
     % Draw OK button
     uicontrol(...
         'style'   , 'pushbutton',...
@@ -1770,25 +1758,25 @@ edit_bgcolor = 'White';
         'string'  , 'OK',...
         'position', [total_width*(1-1/2.5)-separator_offset_X,2, ...
                      total_width/2.5,control_height*1.5],...
-        'Callback', @OK)  
-    
+        'Callback', @OK)
+
     % move to center of screen and make visible
     movegui(fighandle, window_position);
     set(fighandle, 'Visible', 'on');
-    
+
     % WAIT until OK/Cancel is pressed
     uiwait(fighandle);
-    
-    
-    
+
+
+
     %% Helper funcitons
-    
-    % Get a value from the values array: 
+
+    % Get a value from the values array:
     % - if it does not exist, return the default value
     % - if it exists, assign it and delete the appropriate entries from the
     %   data arrays
-    function val = getValue(default, tag)        
-        index = strcmpi(fields, tag);        
+    function val = getValue(default, tag)
+        index = strcmpi(fields, tag);
         if any(index)
             val = values{index};
             values(index) = [];
@@ -1798,18 +1786,18 @@ edit_bgcolor = 'White';
             val = default;
         end
     end
-    
+
     %% callback functions
-    
+
     % Enable/disable controls associated with (some) checkboxes
     function EnableDisable(which, varargin) %#ok<VANUS>
-        
+
         % find proper range of controls to switch
         if (num_separators > 1)
              range = (which+1):(separators(separators > which)-1);
         else range = (which+1):numel(controls);
         end
-        
+
         % enable/disable these controls
         if strcmpi(get(controls(range(1)), 'enable'), 'off')
             set(controls(range), 'enable', 'on')
@@ -1817,47 +1805,47 @@ edit_bgcolor = 'White';
             set(controls(range), 'enable', 'off')
         end
     end
-    
-    % OK button: 
+
+    % OK button:
     % - update fields in [settings]
     % - assign [button] output argument ('ok')
     % - kill window
     function OK(varargin) %#ok<VANUS>
-        
+
         % button pressed
         button = 'OK';
-        
+
         % fill settings
         for i = 1:numel(controls)
-            
-            % extract current control's string, value & type            
+
+            % extract current control's string, value & type
             str   = get(controls(i), 'string');
             val   = get(controls(i), 'value');
             style = get(controls(i), 'style');
-            
+
             % popups/edits
             if ~strcmpi(style, 'checkbox')
                 % extract correct string (popups only)
                 if strcmpi(style, 'popupmenu'), str = str{val}; end
                 % try to convert string to double
-                val = str2double(str); 
-                % insert this double in [settings]. If it was not a 
+                val = str2double(str);
+                % insert this double in [settings]. If it was not a
                 % double, insert string instead
                 if ~isnan(val), settings.(fields{i}) = val;
                 else            settings.(fields{i}) = str;
-                end  
-                
+                end
+
             % checkboxes
             else
                 % we can insert value immediately
                 settings.(fields{i}) = val;
             end
         end
-        
+
         %  kill window
         delete(fighandle);
     end
-    
+
     % Cancel button:
     % - assign [button] output argument ('cancel')
     % - delete figure (so: return default settings)
@@ -1865,7 +1853,7 @@ edit_bgcolor = 'White';
         button = 'cancel';
         delete(fighandle);
     end
-    
+
 end
 function [day, time]        = get_timestamp(varargin)
 % GET_TIMESTAMP
@@ -1886,7 +1874,7 @@ function out                = scalemat(in)
 % -------------------------------------------------------------------------
 if nargin<1, display('out = scalemat(in)'); return; end
 nrow = size(in, 1);
-out = (in - repmat(min(in), nrow, 1)) ./ (repmat(max(in), nrow, 1) - repmat(min(in), nrow, 1)); 
+out = (in - repmat(min(in), nrow, 1)) ./ (repmat(max(in), nrow, 1) - repmat(min(in), nrow, 1));
 end
 function [d, id]            = getchunks(a, opt)
 
@@ -1962,27 +1950,27 @@ if nargin == 2
   if ~ischar(opt)
     error('Additional argument must be a string array');
   end
-  
+
   % Allow for partial arguments
   possibleOptions = ['-full '; '-reps '; '-alpha'];
   iOpt = strmatch(lower(opt), possibleOptions);
-  
+
   if isempty(iOpt) || length(iOpt) > 1
     error('Invalid option. Allowed option: ''-full'', ''-reps'', ''-alpha''');
   else
     switch iOpt
-      
+
       case 1  % '-full'
         % Include single-element chunks
         fullList = true;
         if ischar(a)
           fprintf('''-full'' option not applicable to CHAR arrays.\n');
         end
-        
+
       case 2  % '-reps'
         % Only find 2 or more repeating blocks
         fullList = false;
-        
+
       case 3  % '-alpha'
         % For char arrays, only consider alphabets and numbers as part of
         % words. Punctuations and symbols are regarded as space.
@@ -1990,7 +1978,7 @@ if nargin == 2
         if ~ischar(a)
           fprintf('''-alpha'' option only applicable to CHAR arrays.\n');
         end
-        
+
     end
   end
 end
@@ -2004,14 +1992,14 @@ a = a(:)';
 % Deal with differet classes
 %--------------------------------------------------------------------------
 switch class(a)
-  
+
   case 'double'
     % Leave as is
-    
+
   case {'logical', 'uint8', 'int8', 'uint16', 'int16', 'uint32', 'int32', 'single'}
     % Convert to DOUBLE
     a = double(a);
-    
+
   case 'char'
     if alphanumeric % Get alphabet and number locations
       try % call C-helper function directly (slightly faster)
@@ -2019,11 +2007,11 @@ switch class(a)
       catch %#ok<CTCH>
         a = isletter(a) | ismember(a, 48:57);
       end
-      
+
     else  % Get non-space locations
-      a = ~isspace(a);  
+      a = ~isspace(a);
     end
-  
+
   case 'cell'
     % Convert cell array of strings into unique numbers
     if all(cellfun('isclass', a, 'char'))
@@ -2031,7 +2019,7 @@ switch class(a)
     else
       error('Cell arrays must be array of strings.');
     end
-    
+
   otherwise
     error('Invalid type. Allowed type: CHAR, LOGICAL, NUMERIC, and CELL arrays of strings.');
 end
@@ -2062,10 +2050,10 @@ else
   b(ii)             = 1;
   c                 = diff(b);
   id                = strfind(c, -1);
-  
+
   % Get single-element chunks also
   if fullList
-  
+
     % And more convoluted code
     b1(id)          = 0;
     ii2             = find(b1(1:end-1));
@@ -2073,33 +2061,33 @@ else
     id              = [id,ii2];
     [id,tmp]        = sort(id);
     d               = d(tmp);
-    
+
   else
-    
+
     d               = strfind(c, 1) - id + 1;
-    
+
   end
 end
 function jitsample = makeJitters(minSOA, meanSOA, nTrials)
-% MAKEJITTERS 
+% MAKEJITTERS
 % Make jitters from Poisson distributin with specified min and mean values
 %
 % USAGE: jitsample = makeJitters(minSOA, meanSOA, nTrials)
 %
-goodjit = 0; 
+goodjit = 0;
 while ~goodjit
     jitsample = minSOA + poissrnd(meanSOA-minSOA, nTrials, 1);
     if round(mean(jitsample)*100)==meanSOA*100, goodjit = 1; end
 end
-    
+
 end
 function strucdisp(Structure, depth, printValues, maxArrayLength, fileName)
 %STRUCDISP  display structure outline
 %
 %   STRUCDISP(STRUC, DEPTH, PRINTVALUES, MAXARRAYLENGTH, FILENAME) displays
-%   the hierarchical outline of a structure and its substructures. 
+%   the hierarchical outline of a structure and its substructures.
 %
-%   STRUC is a structure datatype with unknown field content. It can be 
+%   STRUC is a structure datatype with unknown field content. It can be
 %   either a scalar or a vector, but not a matrix. STRUC is the only
 %   mandatory argument in this function. All other arguments are optional.
 %
@@ -2132,13 +2120,13 @@ function strucdisp(Structure, depth, printValues, maxArrayLength, fileName)
 %% Creator and Version information
 % Created by B. Roossien <roossien@ecn.nl> 14-12-2006
 %
-% Based on the idea of 
+% Based on the idea of
 %       M. Jobse - display_structure (Matlab Central FileID 2031)
 %
 % Acknowledgements:
 %       S. Wegerich - printmatrix (Matlab Central FileID 971)
 %
-% Beta tested by: 
+% Beta tested by:
 %       K. Visscher
 %
 % Feedback provided by:
@@ -2163,7 +2151,7 @@ function strucdisp(Structure, depth, printValues, maxArrayLength, fileName)
 % 1.2.2 : Bug fix - a field being an empty array gave an error
 % 1.2.1 : Bug fix
 % 1.2.0 : Increased readability of code
-%         Makes use of 'structfun' and 'cellfun' to increase speed and 
+%         Makes use of 'structfun' and 'cellfun' to increase speed and
 %         reduce the amount of code
 %         Solved bug with empty fieldname parameter
 % 1.1.2 : Command 'eval' removed with a more simple and efficient solution
@@ -2182,12 +2170,12 @@ function strucdisp(Structure, depth, printValues, maxArrayLength, fileName)
     if ~isstruct(Structure)
         error('First input argument must be structure');
     end
-    
+
     % first argument can be a scalar or vector, but not a matrix
     if ~isvector(Structure)
         error('First input argument can be a scalar or vector, but not a matrix');
     end
-    
+
     % default value for second argument is -1 (print all levels)
     if nargin < 2 || isempty(depth)
         depth = -1;
@@ -2200,7 +2188,7 @@ function strucdisp(Structure, depth, printValues, maxArrayLength, fileName)
 
     % second argument only works if it is an integer, therefore floor it
     depth = floor(depth);
-    
+
     % default value for third argument is 1
     if nargin < 3 || isempty(printValues)
         printValues = 1;
@@ -2211,43 +2199,43 @@ function strucdisp(Structure, depth, printValues, maxArrayLength, fileName)
         maxArrayLength = 10;
     end
 
-    
-    % start recursive function   
-    listStr = recFieldPrint(Structure, 0, depth, printValues, ... 
+
+    % start recursive function
+    listStr = recFieldPrint(Structure, 0, depth, printValues, ...
                             maxArrayLength);
 
-    
+
     % 'listStr' is a cell array containing the output
     % Now it's time to actually output the data
     % Default is to output to the command window
     % However, if the filename argument is defined, output it into a file
 
     if nargin < 5 || isempty(fileName)
-        
+
         % write data to screen
         for i = 1 : length(listStr)
             disp(cell2mat(listStr(i, 1)));
         end
-        
+
     else
-        
+
         % open file and check for errors
         fid = fopen(fileName, 'wt');
-        
+
         if fid < 0
             error('Unable to open output file');
         end
-        
+
         % write data to file
         for i = 1 : length(listStr)
             fprintf(fid, '%s\n', cell2mat(listStr(i, 1)));
         end
-        
+
         % close file
         fclose(fid);
-        
+
     end
-    
+
 end
 function listStr = recFieldPrint(Structure, indent, depth, printValues, ...
                                  maxArrayLength)
@@ -2316,7 +2304,7 @@ isStruct = structfun(@isstruct, Structure);
 strucFields = fields(isStruct == 1);
 
 
-%% Recursively print structure fields 
+%% Recursively print structure fields
 % The next step is to select each structure field and handle it
 % accordingly. Each structure can be empty, a scalar, a vector or a matrix.
 % Matrices and long vectors are only printed with their fields and not with
@@ -2340,7 +2328,7 @@ for iField = 1 : length(strucFields)
 
     fieldName = cell2mat(strucFields(iField));
     Field =  Structure.(fieldName);
-    
+
     % Empty structure
     if isempty(Field)
 
@@ -2367,7 +2355,7 @@ for iField = 1 : length(strucFields)
             listStr = [listStr; {line}];
         end
 
-    % Short vector structure of which the values should be printed    
+    % Short vector structure of which the values should be printed
     elseif (isvector(Field)) &&  ...
            (printValues > 0) && ...
            (length(Field) < maxArrayLength) && ...
@@ -2425,7 +2413,7 @@ maxFieldLength = max(cellfun(@length, fields));
 % Print non-structure fields without the values. This can be done very
 % quick.
 if printValues == 0
-    
+
     noStrucFields = fields(isStruct == 0);
 
     for iField  = 1 : length(noStrucFields)
@@ -2504,8 +2492,8 @@ otherFields = fields(isOther == 1);
 % - The values of cells are not printed
 
 
-% Start with printing strings and characters. To avoid the display screen 
-% becoming a mess, the part of the string that is printed is limited to 31 
+% Start with printing strings and characters. To avoid the display screen
+% becoming a mess, the part of the string that is printed is limited to 31
 % characters. In the future this might become an optional parameter in this
 % function, but for now, it is placed in the code itself.
 % if the string is longer than 31 characters, only the first 31  characters
@@ -2519,19 +2507,19 @@ for iField = 1 : length(charFields)
     Field = cell2mat(charFields(iField));
 
     filler = char(ones(1, maxFieldLength - length(Field) + 2) * 45);
-    
+
     if (size(Structure.(Field), 1) > 1) && (size(Structure.(Field), 2) > 1)
-        
+
         varStr = createArraySize(Structure.(Field), 'char');
-        
+
     elseif length(Field) > maxStrLength
-        
+
         varStr = sprintf(' ''%s...''', Structure.(Field(1:maxStrLength)));
-        
+
     else
-        
+
         varStr = sprintf(' ''%s''', Structure.(Field));
-        
+
     end
 
     listStr = [listStr; {[strIndent '   |' filler ' ' Field ' :' varStr]}];
@@ -2541,12 +2529,12 @@ end
 % Print empty fields
 
 for iField = 1 : length(emptyFields)
-    
-    
+
+
     Field = cell2mat(emptyFields(iField));
-    
+
     filler = char(ones(1, maxFieldLength - length(Field) + 2) * 45);
-    
+
     listStr = [listStr; {[strIndent '   |' filler ' ' Field ' : [ ]' ]}];
 
 end
@@ -2556,25 +2544,25 @@ end
 % information
 
 for iField = 1 : length(logicalFields)
-    
+
     Field = cell2mat(logicalFields(iField));
-    
+
     filler = char(ones(1, maxFieldLength - length(Field) + 2) * 45);
-    
+
     if isscalar(Structure.(Field))
-        
+
         logicalValue = {'False', 'True'};
-        
+
         varStr = sprintf(' %s', logicalValue{Structure.(Field) + 1});
 
     else
 
         varStr = createArraySize(Structure.(Field), 'Logic array');
-                
+
     end
 
     listStr = [listStr; {[strIndent '   |' filler ' ' Field ' :' varStr]}];
-    
+
 end
 
 
@@ -2582,11 +2570,11 @@ end
 % floats and exponential numbers are printed in their own format.
 
 for iField = 1 : length(scalarFields)
-    
+
     Field = cell2mat(scalarFields(iField));
-    
+
     filler = char(ones(1, maxFieldLength - length(Field) + 2) * 45);
-    
+
     varStr = sprintf(' %g', Structure.(Field));
 
     listStr = [listStr; {[strIndent '   |' filler ' ' Field ' :' varStr]}];
@@ -2599,23 +2587,23 @@ end
 % the array.
 
 for iField = 1 : length(vectorFields)
-    
+
     Field = cell2mat(vectorFields(iField));
-    
+
     filler = char(ones(1, maxFieldLength - length(Field) + 2) * 45);
-    
+
     if length(Structure.(Field)) > maxArrayLength
-        
+
         varStr = createArraySize(Structure.(Field), 'Array');
-        
+
     else
 
         varStr = sprintf('%g ', Structure.(Field));
 
         varStr = ['[' varStr(1:length(varStr) - 1) ']'];
-                    
+
     end
-    
+
     listStr = [listStr; {[strIndent '   |' filler ' ' Field ' : ' varStr]}];
 
 end
@@ -2632,27 +2620,27 @@ end
 % This method was developed by S. Wegerich.
 
 for iField = 1 : length(matrixFields)
-    
+
     Field = cell2mat(matrixFields(iField));
-    
+
     filler = char(ones(1, maxFieldLength - length(Field) + 2) * 45);
-    
+
     if numel(Structure.(Field)) > maxArrayLength
-        
+
         varStr = createArraySize(Structure.(Field), 'Array');
 
         varCell = {[strIndent '   |' filler ' ' Field ' :' varStr]};
-        
+
     else
 
         matrixSize = size(Structure.(Field));
-        
+
         filler2 = char(ones(1, maxFieldLength + 6) * 32);
 
         dashes = char(ones(1, 12 * matrixSize(2) + 1) * 45);
 
         varCell = {[strIndent '   |' filler2 dashes]};
-        
+
         % first line with field name
         varStr = sprintf('%#10.2e |', Structure.(Field)(1, :));
 
@@ -2663,14 +2651,14 @@ for iField = 1 : length(matrixFields)
         for j = 2 : matrixSize(1)
 
             varStr = sprintf('%#10.2e |', Structure.(Field)(j, :));
-            
+
             varCell = [varCell; {[strIndent '   |' filler2 '|' varStr]}];
         end
 
         varCell = [varCell; {[strIndent '   |' filler2 dashes]}];
-                    
+
     end
-    
+
     listStr = [listStr; varCell];
 
 end
@@ -2682,9 +2670,9 @@ end
 for iField = 1 : length(cellFields)
 
     Field = cell2mat(cellFields(iField));
-    
+
     filler = char(ones(1, maxFieldLength - length(Field) + 2) * 45);
-    
+
     varStr = createArraySize(Structure.(Field), 'Cell');
 
     listStr = [listStr; {[strIndent '   |' filler ' ' Field ' :' varStr]}];
@@ -2697,9 +2685,9 @@ end
 for iField = 1 : length(otherFields)
 
     Field = cell2mat(otherFields(iField));
-    
+
     filler = char(ones(1, maxFieldLength - length(Field) + 2) * 45);
-    
+
     varStr = createArraySize(Structure.(Field), 'Unknown');
 
     listStr = [listStr; {[strIndent '   |' filler ' ' Field ' :' varStr]}];
@@ -2710,7 +2698,7 @@ end
 function str = getIndentation(indent)
     x = '   |    ';
     str = '';
-    
+
     for i = 1 : indent
         str = cat(2, str, x);
     end
@@ -2720,12 +2708,12 @@ function varStr = createArraySize(varName, type)
 
     arraySizeStr = sprintf('%gx', varSize);
     arraySizeStr(length(arraySizeStr)) = [];
-    
+
     varStr = [' [' arraySizeStr ' ' type ']'];
 end
 
 
-  
+
 end
 function writedesign(in, outname)
 % CS_WRITEREPORT
@@ -2763,7 +2751,7 @@ end
 % *
 % =========================================================================
 function varargout  = printstruct(S, varargin)
-% PRINTSTRUCT Print a structure 
+% PRINTSTRUCT Print a structure
 %  - adapted from STRUCDISP.m by B. Roossien <roossien@ecn.nl>
 %
 %  USAGE: varargout = printstruct(S, varargin)
@@ -2773,7 +2761,7 @@ function varargout  = printstruct(S, varargin)
 %	Created:  2015-08-13
 %	Email:     spunt@caltech.edu
 % __________________________________________________________________________
-def = { ... 
+def = { ...
 	'nlevels',          -1,             ...
 	'printvalues',		 1,             ...
     'maxarraylength',   25,             ...
@@ -2790,13 +2778,13 @@ if length(S)==1, str = [cellstr(name); str]; end
 if nargout==0
     for i = 1:length(str), disp(cell2mat(str(i, 1))); end
 else
-    varargout{1} = str;  
+    varargout{1} = str;
 end
 end
 function listStr    = recFieldPrint(Structure, indent, depth, printValues, maxArrayLength, structname)
 % RECFIELDPRINT Recursive printing of a structure variable
 %   This function and its dependencies were taken from:
-%       STRUCDISP.m by 
+%       STRUCDISP.m by
 %       Contact author: B. Roossien <roossien@ecn.nl>
 %       (c) ECN 2007-2008
 %       Version 1.3.0
@@ -2807,7 +2795,7 @@ if length(Structure) > 1
         varStr = createArraySize(Structure, structname);
         listStr = [{' '}; {[structname, varStr]}];
         body = recFieldPrint(Structure(1), indent, depth, ...
-                             printValues, maxArrayLength);            
+                             printValues, maxArrayLength);
         listStr = [listStr; body];
     else
         for iStruc = 1 : length(Structure)
@@ -2828,7 +2816,7 @@ strIndent   = getIndentation(indent);
 for iField = 1 : length(strucFields)
     fieldName = cell2mat(strucFields(iField));
     Field =  Structure.(fieldName);
-    
+
     % Empty structure
     if isempty(Field)
         strSize = createArraySize(Field, structname);
@@ -2846,7 +2834,7 @@ for iField = 1 : length(strucFields)
         else
             listStr = [listStr; {line}];
         end
-    % Short vector structure of which the values should be printed    
+    % Short vector structure of which the values should be printed
     elseif (isvector(Field)) &&  ...
            (printValues > 0) && ...
            (length(Field) < maxArrayLength) && ...
@@ -2939,8 +2927,8 @@ otherFields   = fields(isOther == 1);
 % - Vectors are printed as long as they are shorter than maxArrayLength
 % - Matrices are printed if they have less elements than maxArrayLength
 % - The values of cells are not printed
-% Start with printing strings and characters. To avoid the display screen 
-% becoming a mess, the part of the string that is printed is limited to 31 
+% Start with printing strings and characters. To avoid the display screen
+% becoming a mess, the part of the string that is printed is limited to 31
 % characters. In the future this might become an optional parameter in this
 % function, but for now, it is placed in the code itself.
 % if the string is longer than 31 characters, only the first 31  characters
@@ -3021,7 +3009,7 @@ for iField = 1 : length(matrixFields)
         filler2 = char(ones(1, maxFieldLength + 6) * 32);
         dashes = char(ones(1, 12 * matrixSize(2) + 1) * 45);
         varCell = {[strIndent '   |' filler2 dashes]};
-        
+
         % first line with field name
         varStr = sprintf('%#10.2e |', Structure.(Field)(1, :));
         varCell = [varCell; {[strIndent '   |' filler ' ' ...
@@ -3032,9 +3020,9 @@ for iField = 1 : length(matrixFields)
             varCell = [varCell; {[strIndent '   |' filler2 '|' varStr]}];
         end
         varCell = [varCell; {[strIndent '   |' filler2 dashes]}];
-                    
+
     end
-    
+
     listStr = [listStr; varCell];
 end
 % Print cell array information, i.e. the size of the cell array. The
@@ -3068,31 +3056,31 @@ function varStr     = createArraySize(varName, type)
 end
 function argstruct  = setargs(defaults, optargs)
 % SETARGS Name/value parsing and assignment of varargin with default values
-% 
+%
 % This is a utility for setting the value of optional arguments to a
 % function. The first argument is required and should be a cell array of
 % "name, default value" pairs for all optional arguments. The second
 % argument is optional and should be a cell array of "name, custom value"
 % pairs for at least one of the optional arguments.
-% 
-%  USAGE: argstruct = setargs(defaults, args)  
+%
+%  USAGE: argstruct = setargs(defaults, args)
 % __________________________________________________________________________
 %  OUTPUT
-% 
+%
 % 	argstruct: structure containing the final argument values
 % __________________________________________________________________________
 %  INPUTS
-% 
-% 	defaults:  
+%
+% 	defaults:
 %       cell array of "name, default value" pairs for all optional arguments
-% 
-% 	optargs [optional]     
+%
+% 	optargs [optional]
 %       cell array of "name, custom value" pairs for at least one of the
-%       optional arguments. this will typically be the "varargin" array. 
+%       optional arguments. this will typically be the "varargin" array.
 % __________________________________________________________________________
 %  USAGE EXAMPLE (WITHIN FUNCTION)
-% 
-%     defaults    = {'arg1', 0, 'arg2', 'words', 'arg3', rand}; 
+%
+%     defaults    = {'arg1', 0, 'arg2', 'words', 'arg3', rand};
 %     argstruct   = setargs(defaults, varargin)
 %
 
@@ -3100,7 +3088,7 @@ function argstruct  = setargs(defaults, optargs)
 % ---------------------- Copyright (C) 2015 Bob Spunt ----------------------
 %	Created:  2015-03-11
 %	Email:    spunt@caltech.edu
-% 
+%
 %   This program is free software: you can redistribute it and/or modify
 %   it under the terms of the GNU General Public License as published by
 %   the Free Software Foundation, either version 3 of the License, or (at
@@ -3114,10 +3102,10 @@ function argstruct  = setargs(defaults, optargs)
 % __________________________________________________________________________
 if nargin < 1, mfile_showhelp; return; end
 if nargin < 2, optargs = []; end
-defaults = reshape(defaults, 2, length(defaults)/2)'; 
+defaults = reshape(defaults, 2, length(defaults)/2)';
 if ~isempty(optargs)
     if mod(length(optargs), 2)
-        error('Optional inputs must be entered as Name, Value pairs, e.g., myfunction(''name'', value)'); 
+        error('Optional inputs must be entered as Name, Value pairs, e.g., myfunction(''name'', value)');
     end
     arg = reshape(optargs, 2, length(optargs)/2)';
     for i = 1:size(arg,1)
@@ -3128,7 +3116,7 @@ if ~isempty(optargs)
            error('Input "%s" does not match a valid input.', arg{i,1});
        else
            defaults{idx,2} = arg{i,2};
-       end  
+       end
     end
 end
 for i = 1:size(defaults,1), assignin('caller', defaults{i,1}, defaults{i,2}); end
@@ -3138,7 +3126,7 @@ function mfile_showhelp(varargin)
 % MFILE_SHOWHELP
 ST = dbstack('-completenames');
 if isempty(ST), fprintf('\nYou must call this within a function\n\n'); return; end
-eval(sprintf('help %s', ST(2).file));  
+eval(sprintf('help %s', ST(2).file));
 end
 function h          = headsup(msg, titlestr, wait4resp)
 % HEADSUP Present message to user and wait for a response
@@ -3146,7 +3134,7 @@ function h          = headsup(msg, titlestr, wait4resp)
 %  USAGE: h = headsup(msg, *titlestr, *wait4resp)    *optional input
 % __________________________________________________________________________
 %  INPUTS
-%   msg: character array to present to user 
+%   msg: character array to present to user
 %
 
 % ---------------------- Copyright (C) 2014 Bob Spunt ----------------------
@@ -3172,15 +3160,15 @@ h(1) = figure(...
     'Visible','on',...
     'Toolbar','none');
 h(2) = uicontrol('parent', h(1), 'units', 'norm', 'style',  'text', 'backg', [0.8941    0.1020    0.1098]*.60,'foreg', [248/255 248/255 248/255], 'horiz', 'center', ...
-    'pos', [.050 .375 .900 .525], 'fontsize', 14, 'fontname', 'arial', 'fontw', 'bold', 'string', msg, 'visible', 'on'); 
+    'pos', [.050 .375 .900 .525], 'fontsize', 14, 'fontname', 'arial', 'fontw', 'bold', 'string', msg, 'visible', 'on');
 if wait4resp
     h(3) = uicontrol('parent', h(1), 'units', 'norm', 'style', 'push', 'foreg', [0 0 0], 'horiz', 'center', ...
     'pos', [.4 .075 .2 .30], 'fontname', 'arial', 'fontsize', 16, 'fontw', 'bold', 'string', 'OK', 'visible', 'on', 'callback', {@cb_ok, h});
-    uiwait(h(1)); 
+    uiwait(h(1));
 end
-drawnow; 
+drawnow;
 end
 function cb_ok(varargin)
     delete(findobj(0, 'Tag', 'headsup'));
-    drawnow; 
+    drawnow;
 end
