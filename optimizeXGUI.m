@@ -1,6 +1,8 @@
 function optimizeXGUI(params)
 % OPTIMIZEXGUI
 %
+% USAGE: optimizeXGUI([params])
+%
 % Run this function at the command line to open the GUI. Once the design
 % search has ended, a time stamped folder will be created in the software
 % directory. In the folder, details regarding the most efficient designs
@@ -25,7 +27,21 @@ function optimizeXGUI(params)
 % Contact: bobspunt@gmail.com
 % Current Version: 20160104
 %
-if nargin==0, params = getParams; end
+if nargin==0
+	
+	params = getParams;
+
+elseif ~isstruct(params)
+
+	if iscell(params), params = char(params); end
+
+	try
+		load(params)
+	catch err
+		error_handler(err);
+	end
+
+end
 
 % =========================================================================
 % Run defineX.m
@@ -374,19 +390,18 @@ function optimizeX(params)
     save([outdir filesep 'designinfo.mat'], 'design', 'params');
     fprintf('Finished in %2.2f minutes at %s on %s\n\n', toc/60, t, d);
 
-    %% Visualize the Best Design
+   %% Visualize the Best Design
 
-    hfig = figure('color', 'white', 'units', 'norm', 'pos', [.3 .3 .3 .4]);
-    hax = axes(hfig);
-    winner = scalemat(design{1}.X);
-    winner = [winner ones(size(winner,1), 1)];
-    h = imagesc(winner, 'parent', hax); colormap('gray');
-    set(hax, 'FontName', 'Arial', 'FontSize', 18, 'XTick', 1:size(winner,2));
-    xticklabel = strcat({'cond'}, get(hax, 'XTickLabel'));
-    xticklabel{end} = 'constant';
-    set(hax, 'xticklabel', xticklabel);
-    ylabel('TR', 'fontsize', 18, 'fontweight', 'bold');
-    title('The "Best" Design Matrix', 'fontsize', ceil(18*1.10), 'fontweight', 'bold');
+	hfig = figure('color', 'white', 'units', 'norm', 'pos', [.3 .3 .3 .4]);
+	winner = scalemat(design{1}.X);
+	winner = [winner ones(size(winner,1), 1)];
+	h = imagesc(winner, 'parent', gca); colormap('gray');
+	set(gca, 'FontName', 'Arial', 'FontSize', 18, 'XTick', 1:size(winner,2));
+	xticklabel = strcat({'cond'}, get(gca, 'XTickLabel'));
+	xticklabel{end} = 'constant';
+	set(gca, 'xticklabel', xticklabel);
+	ylabel('TR', 'fontsize', 18, 'fontweight', 'bold');
+	title('The "Best" Design Matrix', 'fontsize', ceil(18*1.10), 'fontweight', 'bold');
 
 end
 function design = makeX(params, order, verbose)
