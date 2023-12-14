@@ -1,3 +1,7 @@
+# **THIS REPOSITORY IS NO LONGER ACTIVELY MAINTAINED - USE AT YOUR OWN RISK**
+
+---
+
 # easy-optimize-x
 GUI-based MATLAB software for optimizing the design of fMRI tasks. See [Help Page](http://spunt.github.io/easy-optimize-x) for usage instructions.
 
